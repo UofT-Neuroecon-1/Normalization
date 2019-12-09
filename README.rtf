@@ -1,0 +1,80 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf500
+{\fonttbl\f0\froman\fcharset0 Times-Roman;\f1\froman\fcharset0 Times-Bold;}
+{\colortbl;\red255\green255\blue255;\red38\green38\blue38;}
+{\*\expandedcolortbl;;\cssrgb\c20000\c20000\c20000;}
+\margl1440\margr1440\vieww22480\viewh18460\viewkind0
+\deftab720
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f0\fs24 \cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 To run estimation, run the script \'93RunEstimationVN.m\'94,\
+\
+Different models an be estimated via the following:\
+\
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f1\b \cf2 \
+MNLogit
+\f0\b0 \
+44: opts.Models=\{\'91MNP\'92\};\
+46: opts.Prob=\{\'91Logit\'92\};\
+\
+Output: estimate for sigma (variance)\
+\
+
+\f1\b MNProbit (Independent Errors)
+\f0\b0 \
+44: opts.Models=\{\'91MNP\'92\};\
+46: opts.Prob=\{\'91Probit\'92\};\
+\
+Output: estimate for sigma (variance)\
+\
+
+\f1\b DivNorm (simple normalization with normal errors, this is the original Louie et al. model)
+\f0\b0 \
+44: opts.Models=\{\'91DN\'92\};\
+46: opts.Prob=\{\'91Probit\'92\};\
+\
+Output: estimate for sigma and omega\
+\
+
+\f1\b DivNorm (with beta controlling curvature of normalization)
+\f0\b0 \
+44: opts.Models=\{\'91DNb\'92\};\
+46: opts.Prob=\{\'91Probit\'92\};\
+\
+Output: estimate for sigma and omega and beta\
+\
+If you want to estimate the model with beta in it (curvature of normalization) I recommend making omega hierarchical (see below).\
+\
+
+\f1\b DivNorm (with asymmetric recurrent weight)
+\f0\b0 \
+44: opts.Models=\{\'91DNw\'92\};\
+46: opts.Prob=\{\'91Probit\'92\};\
+\
+This was actually our best-fitting model in the paper.\
+\
+Output: sigma, omega, omega_i-omega (so you have to sum the last two to get the estimate of omega_i)\
+\
+
+\f1\b Hierarchical Model
+\f0\b0 \
+line 49:\'a0To turn on hierarchical estimation for any parameter, put a 1 in the appropriate spot.\
+\
+The implementation of this code is a bit rough. For instance, the\'a0code is not tested for parameters other than omega, but should work. The output order of the the first K parameters is the same as for the non-hierarchical model. Then for each hierarchical parameter, the second \'93shape\'94 parameter follows in the same order. So for a hierarchical omega the output will be:\
+\
+Output: sigma, omega (scale), beta, omega (shape)\
+\
+This will also take a looong time to run because of the additional integration step needed. But it\'92s worth it given its ability to address some of the heterogeneity in the data.\
+\
+
+\f1\b Additional Notes
+\f0\b0 \
+Though the code will give you standard errors for all parameters, I highly recommend using Likelihood Ratio tests for nested models when possible (I.e. the test on omega is a LR stat distributed chi-square with 1 degree of freedom).
+\f1\b \
+\pard\pardeftab720\sl280\partightenfactor0
+
+\f0\b0 \cf2 \
+line 69:\'a0theta0=[]; %will start the algorithm at random initial points. You can also set them manually.\
+}
