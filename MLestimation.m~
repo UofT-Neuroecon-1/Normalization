@@ -1,6 +1,6 @@
 function out=MLestimation(dataIn,par0,opts)
 
-%This function implements the likelihood maxmization. Specifically, it:
+%This function implemts the likelihood maxmization. Specifically, it:
 %-formats the data for likelhood estimation and chooses the maximization algorithm
 %-sets the initial points
 %-implements the restrictions of the model (set in RunEstimationVN.m)
@@ -73,9 +73,9 @@ end
 %         %alg='fmincon';
 %         alg='fminsearchbnd';
 %     end
-% alg='fminsearchbnd';
-alg='fmincon';
-opts.objfun=@LLfun; 
+   % alg='fminsearchbnd';
+   alg='fmincon';
+   opts.objfun=@LLfun; 
 
 %% Set Restrictions 
 opts=setRestrictions(model,Jm,opts);
@@ -113,43 +113,59 @@ end
     if strcmp(alg,'optimize') 
         display('Using Simplex Method');
 
+        %Use optimize toolbox
+        %options.Display='plot';
         options.MaxIter=10000;
         options=optimset(options,'Display',opts.Display);
 
+%         optfun=@optimize;
+%         varin={[],[],[],[],[],[],[],[],options,alg};
+
          time=('00:10:00');
         getHess=0;
-        
     elseif strcmp(alg,'fminsearch')
          display('Using Simplex Method');
          options=optimset(options,'Display',opts.Display);
+ %        optfun=@fminsearch;
+ %        varin={options};
           
     elseif strcmp(alg,'fminsearchbnd')
          display('Using Bounded Simplex Method');
          options=optimset(options,'Display',opts.Display);
          
           optfun=@fminsearchbnd;
-
+ %       varin={LB(LB~=UB),UB(LB~=UB),options};
         
     elseif strcmp(alg,'fminsearchcon')
          display('Using (Constrained) Simplex Method');
          options=optimset(options,'Display',opts.Display,'OutputFcn',@outfun);
+%          optfun=@fminsearchcon;
+%        varin={LB(LB~=UB),UB(LB~=UB),LIN(LB~=UB),0,[],options};
 
     elseif strcmp(alg,'fminunc')
          display('Using Unconstrained Quasi-Newton');
          options=optimset(options,'Largescale','off','Display',opts.Display);
+ %        optfun=@fminunc;
+ %        varin={options};
 
          getHess=1;
 
     elseif strcmp(alg,'fmincon')
          display('Using Constrained Quasi-Newton');
          options=optimset(options,'Algorithm','interior-point','Display',opts.Display,'OutputFcn',@outfun);
-         optfun=@fmincon;
+        optfun=@fmincon;
+%          varin={[],[],LIN(LB~=UB),0,LB(LB~=UB),UB(LB~=UB),[],options};
+%        varin={[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options};
 
          getHess=1;
 
     end
 
     display(sprintf('TolX: %g   TolFun: %g',options.TolX,options.TolFun));
+
+%     if isempty(theta0)
+%         -LLfun(LB)
+%     end
 
     if opts.numInit==1
         %[thetah, maxLL, exitflags]=feval(optfun,opts.objfun,theta0,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
@@ -204,6 +220,8 @@ end
 % 
 %         end
 
+
+    %matlabpool close
    
 
     %Get likelihood at estimates for Vuong test	
