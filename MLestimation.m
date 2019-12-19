@@ -14,33 +14,56 @@ function out=MLestimation(dataIn,par0,opts)
     
     options.MaxFunEvals = 2000;
    
-    
+        %% Is data unbalanced?
+    T1=length(dataIn(1).y);  
+    opts.balanced=1;
+    for s=1:numel(dataIn)       
+        if length(dataIn(s).y)~=T1
+            opts.balanced=0;
+            disp('Dataset is unbalanced')
+        end
+        
+        if isrow(dataIn(s).J)
+           dataIn(s).J=dataIn(s).J'; 
+        end
+        
+    end
 
     %% Pooled or Clustered or Subject or Random Effect
     
     if any(opts.Hier) 
         data=dataIn;
         clear dataIn
-    else %it is not hierarchical
+               
+    else %it is not hierarchical, so pool it
         data.X = {};
+        data.Z = {};
+        data.W = {};
         data.y = [];
         data.J = [];
         data.K = [];
         data.cluster=[];
         for s=1:numel(dataIn)
             data.X = [data.X,dataIn(s).X];
+            if isfield(dataIn,'Z')
+                data.Z = [data.Z,dataIn(s).Z];
+            end
+            if isfield(dataIn,'W')
+                data.W = [data.W,dataIn(s).W];
+            end
             data.y = [data.y;dataIn(s).y];
-            data.J = [data.J;dataIn(s).J'];
+            data.J = [data.J;dataIn(s).J];
             data.K = [data.K;dataIn(s).K'];
             data.cluster=[data.cluster; s*ones(length(dataIn(s).X),1)];
         end
         clear dataIn
     end
     
-        %% Choice set Properties
-    for s=1:numel(data)
-        T=size(data(s).X,2);
 
+    
+    %% Choice set Properties
+    for s=1:numel(data)
+        T=length(data(s).y);
         Jm=max(data(s).J); %assumes each subject sees the biggest set, so is set here. If not, must set opts.setsize to be max over ALL subjects.
         if ~all(data(s).J==Jm)
             opts.setsize=1; %set size is changing
@@ -55,15 +78,7 @@ function out=MLestimation(dataIn,par0,opts)
             data(s).Mi{t}=M{data(s).y(t)}(1:data(s).J(t)-1,1:data(s).J(t)); 
         end      
     end
-
-    
-if isfield(data,'W')
-    W=data.W;
-else W=[];
-end
-    
-
-    
+     
 %     if indep==0
 %         alg='fminunc';  
 %     else %and homoskedastic
@@ -80,13 +95,17 @@ LB=opts.LB;
 UB=opts.UB;
     
  %% Set starting values 
-    if isempty(par0)
-        disp('No Initial parameters specified, starting point is random');
 
-        theta0=randn(1, sum(LB~=UB));
-    else
-        theta0=par0;
-    end
+        
+if length(par0)==sum(LB~=UB)
+    theta0=par0;
+else
+    disp('Number of initial points does not match number of parameters specified. Using random starting points instead.');
+
+    theta0=randn(1, sum(LB~=UB));
+end
+
+
 disp('Initial Values:')    
 disp(theta0)
     
@@ -164,6 +183,7 @@ end
 %         -LLfun(LB)
 %     end
 
+
     if opts.numInit==1
         %[thetah, maxLL, exitflags]=feval(optfun,opts.objfun,theta0,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
         %[thetah, maxLL, exitflags]=fminsearchbnd(opts.objfun,theta0,LB(LB~=UB),UB(LB~=UB),options);
@@ -172,11 +192,14 @@ end
         [thetah, maxLL, exitflags,~,~,grad,hess]=fmincon(opts.objfun,theta0,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
         i=1;
 
+        parh=LB; 
+        parh(LB~=UB)=thetah(i,:);
+        
         fprintf('Value of the log-likelihood function at convergence: %9.4f \n',-maxLL(i));
         exitflag=exitflags(i);
         disp(['Estimation took ' num2str(toc./60) ' minutes.']);
         disp('Estimates:');
-        disp(thetah);
+        disp(strcat([char(opts.names');char(opts.names(opts.Hier)')],': ',strjust(num2str(num2str(parh')),'left')))
     else
         [thetah, nLL, exitflags, xstart]=rmsearch(opts.objfun,'fminsearchbnd',theta0,LB(LB~=UB),UB(LB~=UB),'options',options,'InitialSample',opts.numInit);
             [maxLL,i]=max(-nLL);
@@ -185,6 +208,7 @@ end
         exitflag=exitflags(i);
         disp(['Estimation took ' num2str(toc./60) ' minutes.']);
         disp('Estimates:');
+        disp()
         disp(thetah);
         save 'mpnormEst1stStage.mat' 'thetah' 'nLL' 'exitflags'
 
@@ -236,10 +260,10 @@ end
     %     disp('Predict shares at estimated coefficients.');
     %     probs=pred(paramhat);
     % end;
-    i0=opts.i0;      
-    save 'mpestimates.mat' 'data' 'grad' 'Jm' 'i0'
+    %i0=opts.i0;      
+    save 'mpestimates.mat' 'data' 'grad' 'Jm'
 
-    display('Estimates saved to disk');
+    disp('Estimates saved to disk');
     
     if opts.ses==1
     disp('Calculating finite-difference hessian and taking inverse for standard errors.');
@@ -255,11 +279,8 @@ end
        ses=zeros(1,length(LB));
     end
     disp('Standard Errors:');
-    disp(ses);
-    save 'mpestimates.mat' 'data' 'H' 'grad' 'Jm' 'ses' 'i0'
-    
-   parh=LB; 
-   parh(LB~=UB)=thetah(i,:);
+    disp(strcat([char(opts.names');char(opts.names(opts.Hier)')],': ',strjust(num2str(num2str(ses')),'left')))
+    save 'mpestimates.mat' 'data' 'H' 'grad' 'Jm' 'ses'
    
     out.exitflag=exitflag;
     out.theta0=theta0;
@@ -278,38 +299,47 @@ end
     function [nLL, Pi]=LLfun(theta)
         
         if any(opts.Hier)
-           
-            R=200;
-            S=opts.cluster;
-            
+                      
             par=opts.LB(1:6);
             
             toEstimate=opts.LB(1:6)~=opts.UB(1:6);
             
             par(toEstimate)=theta(1:end-sum(opts.Hier));
-
+            
+            
             rng(1,'twister') % set random number seed
+            R=1000; %200
+            S=opts.cluster;
+
+            for k=1:sum(opts.Hier)
+                p = haltonset(1,'Skip',1e3,'Leap',1e2);  %Halton Sequence
+                temp3=par(opts.Hier==1);
+                temp4=theta(end-sum(opts.Hier)+1:end);
+                draws(:,:,k)=reshape(gaminv(net(p,R*S),temp3(k),temp4(k)),R,S); %get draws
+            end
+
             
             %draws=gamrnd(par(opts.Hier==1),theta(end-sum(opts.Hier)+1:end),R,1);
-            
-            p = haltonset(1,'Skip',1e3,'Leap',1e2);  %Halton Sequence
-            draws=reshape(gaminv(net(p,R*S),par(opts.Hier==1),theta(end-sum(opts.Hier)+1:end)),R,S); %get draws
             %draws=reshape(logninv(net(p,R*S),par(opts.Hier==1),theta(end-sum(opts.Hier)+1:end)),R,S);
             
             Pi=zeros(length(data(s).X),S,R);
 
-            parfor s=1:S
-            for r=1:R
-                particle=struct();
-                temp2=par;
-                temp2(opts.Hier)=draws(r,s);
-                particle.theta=temp2(toEstimate);
-                Pi(:,s,r)=ProbaChoice(data(s), particle, opts );            
-            end
+            parfor subj=1:S %need to draw independently for each subject for consistency and asymototic normality
+                for r=1:R
+                    particle=struct();
+                    temp2=par;
+                    temp2(opts.Hier)=squeeze(draws(r,subj,:));
+                    particle.theta=temp2(toEstimate);
+                    Pi(:,subj,r)=ProbaChoice(data(subj), particle, opts );            
+                end
             end
 
             %nLL=-sum(log(mean(prod(Pi),2))); Too many zeros, line below corrects numerical issues
-            nLL=-sum(log(mean(exp(T*log(3)+sum(log(Pi))),3)) - T*log(3));
+            if opts.balanced
+                nLL=-sum(log(mean(exp(T*log(3)+sum(log(Pi))),3)) - T*log(3));
+            else
+                error('dataset isnt balanced');
+            end
             
         else
             particle.theta=theta;

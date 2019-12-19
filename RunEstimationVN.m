@@ -14,14 +14,20 @@ backup_file = ''; 'backup1-StndPDN.mat';
 %% Data format
 % Requires a struct array (e.g. data) of size N x 1
 % Each entry must contain a structure with at least 2 fields:
-% data(n).X : cell array of T observations.
+% data(n).X : 1xT cell array of T observations.
 % data(n).X{t}: Matrix of J(t) options x K(t) attributes
 %    -assumes that max(J(t)) is the same across all subjects (i.e. each
 %    subject sees the biggest choice set)
 % data(n).y : Vector of T x 1 Choices
+%data(n).J : Vector of T x 1 Choice Set Size
 
 %load data/ExampleDataSS
-load data/ExampleData3
+%load data/ExampleData3
+%load ~/Dropbox/Projects/Ebbinghaus/code/testdataout.mat
+%load ~/Dropbox/Projects/Ebbinghaus/code/subjtestdataout.mat
+%load ~/Dropbox/Projects/Ebbinghaus/code/subjtestdataout2.mat
+%load ~/Dropbox/Projects/Ebbinghaus/code/realdatabalancedout.mat
+load ~/Dropbox/Projects/Ebbinghaus/code/realdatabalancedout.mat
 
 %% Estimation Parameters
 % You can create your own parameters that will be passed to the likelihood
@@ -41,12 +47,12 @@ load data/ExampleData3
 %{'PDNNew'}
 %{'RemiStand';'HierarchicalProbit'}
 %{'Range'}
-opts.Models = {'DNb'}
+%{'Ebb'}
+opts.Models = {'Ebb2'}
 
-opts.Prob='Probit'; %'Probit','Logit','GHK', 'HP' Is the covariance matrix restricted to be independent?
-opts.names={'kappa','sigma','omega','a','b','w2'};
-opts.i0=3; %normalize w.r.t. altnerative...
-opts.Hier=logical([0 0 0 0 0 0]); %which parameters to make hierarchical: kappa, sigma, omega, alpha, beta;
+opts.Prob='Logit'; %'Probit','Logit','GHK', 'HP' Is the covariance matrix restricted to be independent?
+opts.names={'kappa','sigma','omega','a','b','wx'};
+opts.Hier=logical([0 1 1 0 0 0]); %which parameters to make hierarchical: kappa, sigma, omega, alpha, beta;
 
 %opts.cluster=ones(length(data),1); %all in same cluster (i.e. pooled)
 opts.cluster=length(data); % each in own cluster
@@ -66,7 +72,7 @@ opts.cluster=length(data); % each in own cluster
 %theta0=[0 0.4923 19 -.032];
 %theta0=[0.012 0.412 25.74];
 %theta0=[0.012 0.412];
-theta0=[];
+theta0=[0.0015991      1.7574      1.2482    0.037883  7.7886e-09    0.048639];
 %theta0=[0.069281675331641 1.823034213307364 0.108391494341653]; %random parameter on omega
 %theta0=[0.069281675331641 1.823034213307364 1 0.108391494341653]; %random parameter on omega w beta
 %theta0=[0.441 0.357];

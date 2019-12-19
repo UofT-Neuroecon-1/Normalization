@@ -28,12 +28,12 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
 %        end
 % 
     
-    Pi=F(data.X,particle.theta); %Get Probs
+    Pi=F(data.X,data.Z,data.W,particle.theta); %Get Probs
  
     Pi(Pi==0)=realmin;  % make sure that the probability of a choice is not 0
     
 
-    function Pi=Logit(X,theta)
+    function Pi=Logit(X,~,~,theta)
         %True params
         alpha = theta(1);
         Beta = (opts.attrSign .* theta(2:end))';
@@ -50,7 +50,7 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         Pi = 0.99 .* Pi + 0.01/J;
     end
 
-    function Pi=PDNNew(X,theta)
+    function Pi=PDNNew(X,~,~,theta)
         %True params
         alpha = theta(1);
         sigma = theta(2);
@@ -72,7 +72,7 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         %proba_choice = 0.99 .* proba_choice + 0.01/J;
     end
 
-    function Pi=PDNProbit(X,theta)
+    function Pi=PDNProbit(X,~,~,theta)
         %True params
         alpha = theta(1);
         sigma = theta(2);
@@ -93,7 +93,7 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         %proba_choice(y) = 0.99 .* proba_choice(y) + 0.01/J;
     end
 
-    function Pi=DN(X,theta)
+    function Pi=DN(X,~,~,theta)
         
         par=opts.LB;
         if any(opts.LB(1:8)~=opts.UB(1:8))
@@ -113,7 +113,8 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         f = @(x) (x.^a);
         %denom=@(x) (s + w*sum(x) );
         
-        %denom=@(x) (s + (w + w2*eye(length(x)))* x );
+        %denom=@(x) (s + (w + w2*eye(length(x)))* x ); %this line is not
+        %wrong
 
         denom=@(x) (s + vecnorm((w + w2*eye(length(x))).*x',b,2) ); %Note that w2 is the "extra" weight relative w. So in reporting results, add them together for w_i
         %denom=@(x) (s + ((w + w2*eye(length(x))).*x.^b').^(1/b) );
@@ -121,12 +122,13 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         %denom=@(x) (sigma + omega*norm(x,b) );
         %vecnorm(cell2mat(X)',2)
         sumv=cellfun(denom,X,'uniformoutput',false);
-        v=cellfun(@rdivide,cellfun(f,X,'uniformoutput',false),sumv,'uniformoutput',false);
+        numerator=cellfun(f,X,'uniformoutput',false);
+        v=cellfun(@rdivide,numerator,sumv,'uniformoutput',false);
 
         Pi = P(data.Mi,v,data.J); %y is Mi
     end
 
-    function Pi=Range(X,theta)
+    function Pi=Range(X,~,~,theta)
  
         par=opts.LB;
         if any(opts.LB(1:8)~=opts.UB(1:8))
@@ -159,10 +161,58 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         %denom=@(x) (sigma + omega*norm(x,b) );
         %vecnorm(cell2mat(X)',2)
         sumv=cellfun(denom,X,'uniformoutput',false);
-        v=cellfun(@rdivide,cellfun(f,X,'uniformoutput',false),sumv,'uniformoutput',false);
+        numerator=cellfun(f,X,'uniformoutput',false);
+        v=cellfun(@rdivide,numerator,sumv,'uniformoutput',false);
 
         Pi = P(data.Mi,v,data.J); %y is Mi
             
+    end
+
+function Pi=Ebb(X,prob,ebbc,theta)
+        
+        %theta is a vector, it could be made a matrix to speed up
+        %calculations of hierarchical effects
+    
+        par=opts.LB; %Set all parameters to the lower bound (i.e. set the restricted parameters).
+%         if any(opts.LB~=opts.UB)
+%             par(opts.LB~=opts.UB)=theta; %Set the unrestricted variables to be those passed to the function.
+%         end
+        
+        if any(opts.LB(1:6)~=opts.UB(1:6))
+            par(opts.LB(1:6)~=opts.UB(1:6))=theta; %Set the unrestricted variables to be those passed to the function.
+        end
+        
+        %extract parameters
+        s = par(2);
+        w = par(3); % all weights
+        a = par(4);
+        b = par(5);
+        wx = par(6); %extra weight on own
+        webb = par(1); %weight of ebb
+        
+       
+        if b<0
+            b=0.0000000001; %hack so that s.e. calculation (hessian()) can send negative b. In estimation, beta is restricted to be >0 so doesn't matter.
+        end
+
+        f = @(x) (x.^a);
+        %denom=@(x) (s + w*sum(x) );
+        
+        denom=@(x,ebb) ((s) + ((w+ webb*ebb) + wx*eye(length(x)))* x );
+        %denom=@(x,ebb) (s + ((w+ webb*ebb) + w2*eye(length(x)))* x );
+        %denom=@(x,ebb) (s + (w + w2*eye(length(x)))* x );
+        %denom=@(x,ebb) (s + (w2*eye(length(x)))*w*x );
+        
+        %denom=@(x) (s + vecnorm((w + w2*eye(length(x))).*x',b,2) ); %Note that w2 is the "extra" weight relative w. So in reporting results, add them together for w_i
+        %denom=@(x) (s + ((w + w2*eye(length(x))).*x.^b').^(1/b) );
+        
+        %denom=@(x) (sigma + omega*norm(x,b) );
+
+        sumv=cellfun(denom,X,ebbc,'uniformoutput',false);
+        numerator=cellfun(f,X,'uniformoutput',false);
+        v=cellfun(@rdivide,numerator,sumv,'uniformoutput',false);
+        eu=cellfun(@times,prob,v,'uniformoutput',false);
+        Pi = P(data.Mi,eu,data.J); %y is Mi
     end
 
     function Pi=RemiStand(X,theta)
@@ -208,45 +258,58 @@ end
 function Pi=calcPiProbit(Mi,v,J)
 
     T=size(v,2);
-    [x, w]=GaussHermite(100);
-       
-    if T==1 %one trial at a time
-        if isa(v,'cell')   
-           v = cell2mat(v);
-           Mi=cell2mat(Mi);
+    
+    
+    if length(v{1})==2 %Binary Choice
+        if all(J==J(1)) % all choice sets same size, then all trials together (much faster)   
+            vi=cellfun(@mtimes, Mi, v)';
+            Pi=normcdf(-vi);
+        else
+            error('Different size choice sets. This Probit code doesnt work for binary choice, use Logit')
         end
-        vi=Mi*v;
-
-        %zz=bsxfun(@minus,-sqrt(2).*vi,repmat(-sqrt(2)*reshape(x,[1 100]), J-1,1));
-        zz=(-sqrt(2).*vi) - reshape(x,[1,100]);
-        aa=prod(normcdf(zz),1);
-        Pi=sum(bsxfun(@times,w',squeeze(aa)),2)./sqrt(pi);
         
-    elseif all(J==J(1)) % all trials together (much faster)   
-        viC = cellfun(@mtimes, Mi, v, 'UniformOutput', false); %cell version
-        vi = cell2mat(viC);
+    else %Choice sets larger than binary, use quadrature
+    
+        [x, w]=GaussHermite(100);
+       
+        if T==1 %one trial at a time
+            if isa(v,'cell')   
+               v = cell2mat(v);
+               Mi=cell2mat(Mi);
+            end
+            vi=Mi*v;
 
-        %zz=bsxfun(@minus,-sqrt(2).*vi,repmat(-sqrt(2)*reshape(x,[1 1 100]), [J-1,T,1]));
-        zz=(-sqrt(2).*vi) - reshape(-sqrt(2)*x,[1,1,100]);
-        aa=prod(normcdf(zz));
-        Pi=sum(bsxfun(@times,w',squeeze(aa)),2)./sqrt(pi);
+            %zz=bsxfun(@minus,-sqrt(2).*vi,repmat(-sqrt(2)*reshape(x,[1 100]), J-1,1));
+            zz=(-sqrt(2).*vi) - reshape(x,[1,100]);
+            aa=prod(normcdf(zz),1);
+            Pi=sum(bsxfun(@times,w',squeeze(aa)),2)./sqrt(pi);
 
-    else %all trials, but works with cells in case J is different over trials
-        viC = cellfun(@mtimes, Mi, v, 'UniformOutput', false);
+        elseif all(J==J(1)) % all trials together (much faster)   
+            viC = cellfun(@mtimes, Mi, v, 'UniformOutput', false); %cell version
+            vi = cell2mat(viC);
 
-        f=@(y) (bsxfun(@minus, -sqrt(2).*y , -sqrt(2)*x'));
-        zz=cellfun(f,viC,'uniformoutput',false);
-        aa=cellfun(@(x) prod(x,1),cellfun(@normcdf,zz,'uniformoutput',false),'uniformoutput',false);
-        Pi=sum(bsxfun(@times,w',cell2mat(aa')),2)./sqrt(pi);
+            %zz=bsxfun(@minus,-sqrt(2).*vi,repmat(-sqrt(2)*reshape(x,[1 1 100]), [J-1,T,1]));
+            zz=(-sqrt(2).*vi) - reshape(-sqrt(2)*x,[1,1,100]);
+            aa=prod(normcdf(zz));
+            Pi=sum(bsxfun(@times,w',squeeze(aa)),2)./sqrt(pi);
 
-    end  
-        %mixture 99.9% model and 0.1% unif
-        %Pi = 0.99 .* Pi + 0.01/J;
+        else %all trials, but works with cells in case J is different over trials
+            viC = cellfun(@mtimes, Mi, v, 'UniformOutput', false);
+
+            f=@(y) (bsxfun(@minus, -sqrt(2).*y , -sqrt(2)*x'));
+            zz=cellfun(f,viC,'uniformoutput',false);
+            aa=cellfun(@(x) prod(x,1),cellfun(@normcdf,zz,'uniformoutput',false),'uniformoutput',false);
+            Pi=sum(bsxfun(@times,w',cell2mat(aa')),2)./sqrt(pi);
+
+        end  
+            %mixture 99.9% model and 0.1% unif
+            %Pi = 0.99 .* Pi + 0.01/J;
+    end
 end
 
 function Pi=calcPiLogit(Mi,v,~)
         vi=cellfun(@mtimes, Mi, v, 'UniformOutput', false);
-        sum_exp_v = sum(exp(cell2mat(vi)));
+        sum_exp_v = sum(exp(cell2mat(vi)),1)';
         Pi = 1./(1+sum_exp_v);
 end
             
