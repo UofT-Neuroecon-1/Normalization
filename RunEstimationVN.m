@@ -12,19 +12,6 @@ addpath(['DERIVESTsuite' filesep])
 backup_file = '';
 
 %% Data format
-<<<<<<< Updated upstream
-% Requires a struct array (e.g. data) of size N x 1
-% Each entry must contain a structure with at least 2 fields:
-% data(n).X : cell array of T observations.
-% data(n).X{t}: Matrix of J(t) options x K(t) attributes
-%    -assumes that max(J(t)) is the same across all subjects (i.e. each
-%    subject sees the biggest choice set)
-% data(n).y : Vector of T x 1 Choices
-
-%load data/ExampleDataSS
-%load data/ExampleData3
-load
-=======
 % Requires a struct array (e.g. data) of size N x 1, where N is number of subjects
 
 % Each entry must contain a structure with at least 3 fields:
@@ -59,7 +46,6 @@ load([d,'gluthdataout.mat']);
 %load([d,'glutheyedataout.mat']);
 %load([d,'antoniodataoutHALF.mat']);
 %load([d,'antoniodataoutFULL.mat']);
->>>>>>> Stashed changes
 
 %% Estimation Parameters
 % You can create your own parameters that will be passed to the likelihood
@@ -79,13 +65,6 @@ load([d,'gluthdataout.mat']);
 %{'PDNNew'}
 %{'RemiStand';'HierarchicalProbit'}
 %{'Range'}
-<<<<<<< Updated upstream
-opts.Models = {'DNb'}
-
-opts.Prob='Probit'; %'Probit','Logit','GHK', 'HP' Is the covariance matrix restricted to be independent?
-opts.names={'kappa','sigma','omega','a','b','w2'};
-opts.i0=3; %normalize w.r.t. altnerative...
-=======
 %{'Ebb'}
 opts.Models = {'DN'}
 
@@ -96,7 +75,6 @@ if ~strcmp(opts.Prob,'Logit')
     opts.names=[opts.names,{'c1','c2'}];
 end
 
->>>>>>> Stashed changes
 opts.Hier=logical([0 0 0 0 0 0]); %which parameters to make hierarchical: kappa, sigma, omega, alpha, beta;
 
 %opts.cluster=ones(length(data),1); %all in same cluster (i.e. pooled)
@@ -108,9 +86,6 @@ opts.cluster=length(data); % each in own cluster
 %%%%Initial Parameter Values (the number of elements must match the number
 %%%%of parameters needed in the model above, +1 for every hierarchical
 %%%%parameter)
-<<<<<<< Updated upstream
-theta0=[];
-=======
 %theta0=[0.027 0.214 3.458 0.079];
 %theta0=[0.012 0.412 513.7 0];
 %theta0=[0.012 0.412 25.74];
@@ -121,7 +96,6 @@ theta0=[0.65754   0  ];
 %theta0=[0.012 0.412 25.74];
 %theta0=[0.012 0.412];
 %theta0=[0.0015991      1.7574      1.2482    0.037883  7.7886e-09    0.048639];
->>>>>>> Stashed changes
 %theta0=[0.069281675331641 1.823034213307364 0.108391494341653]; %random parameter on omega
 %theta0=[0.069281675331641 1.823034213307364 1 0.108391494341653]; %random parameter on omega w beta
 %theta0=[0.441 0.357];
@@ -166,15 +140,77 @@ if ~exist('Analysis','dir')
 end
 
 
+ %% Estimation: use adaptive algorthm
+
+% EstimationOutput = EstimationAdaptiveSMC( datapooled, opts, backup_file);
+% Particles = EstimationOutput.Particles;
+% 
+% if strcmp(opts.Models{1},'PDNNew')
+%     EstimationOutput.Particles{1}.postmeans
+%     fprintf('Posterior Mean (Across Subjects) \n')
+%     fprintf('alpha: %f \n sigma: %f \n omega: %f \n',mean(EstimationOutput.Particles{1}.postmeans))
+% end
+
+% sample_part = EstimationOutput.Particles(1).particle{1,1};
+% vect_theta = zeros(opts.G,opts.P,size(sample_part.theta,1),size(sample_part.theta,2));
+% for g=1:opts.G
+%     for p=1:opts.P
+%         vect_theta(g,p,:,:) = EstimationOutput.Particles(1).particle{g,p}.theta;
+%     end
+% end
+% subplot(2,1,1);
+% histogram(vect_theta(:,:,1,1),0:0.05:2)
+% subplot(2,1,2);
+% histogram(vect_theta(:,:,1,2),0:0.05:2)
+ %% Full posterior (all the subjects superposed)
+% prior = [betarnd(3,1,10000,1) gamrnd(1,0.5,10000,1) gamrnd(1,1,10000,1)];
+% prior_mean = mean(prior,1);
+% % Compute posterior means
+% size_NK = size(Particles{1}.particle{1}.theta);
+% VectorizedTheta = nan(opts.P*opts.G,size_NK(1),size_NK(2));
+% for p=1:opts.G*opts.P
+%     VectorizedTheta(p,:,:) = Particles{1}.particle{p}.theta;
+% end
+% post_mean = squeeze(mean(mean(VectorizedTheta,1),2,'omitnan'))
+% % Plot posteriors
+% for theta=1:3
+%     subplot(2,3,theta)
+%     histogram(prior(:,theta),20,'Normalization','pdf')
+%     title(sprintf('prior mean: %.2f',prior_mean(theta)));
+%     subplot(2,3,3+theta)
+%     hist_data = VectorizedTheta(:,:,theta);
+%     hist_data = hist_data(~isnan(hist_data(:)))
+%     histogram(hist_data(:),20,'Normalization','pdf')
+%     title(sprintf('post mean: %.2f',post_mean(theta)));
+% end
+
+  %% Maximum Likelihood (within)
+% theta0 = [1,0,.2];
+% options = optimoptions('fminunc','OptimalityTolerance',1.0e-9,'Display','iter-detailed');
+% theta_indiv_ml = nan(numel(SubjData),3);
+% for subj = 1:numel(SubjData)
+%     Target = @(theta) -LogLikelihood( SubjData{subj}.Xs, SubjData{subj}.ChoiceList, 1 , 'DN' , theta, opts );
+%     theta_indiv_ml(subj,:) = fminunc(Target,theta0,options);
+% end
 %% Maximum Likelihood (pooled)
+% pool data
+
+
+% theta0 = [1,0,.2];
+% options = optimoptions('fminunc','OptimalityTolerance',1.0e-9,'Display','iter-detailed');
+% Target = @(theta) -LogLikelihood( PooledXs, PooledChoiceList, 1 , 'DN' , theta, opts );
+% 
+% theta_pooled = fminunc(Target,theta0,options)
+
+% data_s1 = struct;
+% data_s1.X = datapooled.X(1:270);
+% data_s1.y = datapooled.y(1:270);
+% data_s1.J = datapooled.J(1:270);
+% data_s1.K = datapooled.K;
+% MLEout = MLestimation(data_s1,[],opts);
 
 MLEout = MLestimation(data,theta0,opts);
 
-<<<<<<< Updated upstream
-save MLEout
-
-%% Plot Densities from any hierarchical parameters
-=======
 save([d,'MLEout',opts.Models{:},opts.Prob,'.mat'])
 %% Plot Likelihoods conditional on true values
 % true_theta = [par.a,par.sigma,par.omega]
@@ -194,7 +230,6 @@ save([d,'MLEout',opts.Models{:},opts.Prob,'.mat'])
 % end
 
 %%
->>>>>>> Stashed changes
 if any(opts.Hier)
    MLEout.parh(opts.Hier) 
    
