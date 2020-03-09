@@ -10,7 +10,6 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
     K = data.K;
     
     F=eval(['@' opts.modelF]);
-    P=eval(['@calcPi' opts.Prob]); %Construct function handle for probability function
         
 %       if opts.indep %%%%Gaussian Quadrature       
 %             %If # of alts not constant over sample, calc Pi's individually
@@ -33,6 +32,7 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
     Pi(Pi==0)=realmin;  % make sure that the probability of a choice is not 0
     
 
+<<<<<<< Updated upstream
     function Pi=Logit(X,theta)
         %True params
         alpha = theta(1);
@@ -92,12 +92,80 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         %mixture 99.9% model and 0.1% unif
         %proba_choice(y) = 0.99 .* proba_choice(y) + 0.01/J;
     end
+=======
+%     function Pi=Logit(X,~,~,theta)
+%         %True params
+%         alpha = theta(1);
+%         Beta = (opts.attrSign .* theta(2:end))';
+%         %utility computation
+%         u_x = X.^alpha;
+%         v = zeros(J,1);
+%         for j=1:J
+%             v(j) = sum(Beta .* u_x(j,:)'); 
+%         end
+%         v = v - max(v); %avoid overflow
+%         sum_exp_v = sum(exp(v));
+%         Pi = exp(v)./sum_exp_v;
+%         %mixture 99.9% model and 0.1% unif
+%         Pi = 0.99 .* Pi + 0.01/J;
+%     end
+% 
+%     function Pi=PDNNew(X,~,~,theta)
+%         %True params
+%         alpha = theta(1);
+%         sigma = theta(2);
+%         omega = theta(3:3+K-1);
+%         %utility computation
+%         u_x = X.^alpha;
+%         v = zeros(J,1);
+%         unnorm_u = (opts.attrSign .* u_x)';
+%         for j=1:J
+%             u_y = u_x;
+%             u_y(j,:)=[];
+%             norm_coefs = sum(1 ./ (sigma + omega .* (u_x(j,:) + u_y)),1);%./(J-1);
+%             v(j) = norm_coefs * unnorm_u(:,j); 
+%         end
+%         v = v - max(v); %avoid overflow
+%         sum_exp_v = sum(exp(v));
+%         Pi = exp(v)./sum_exp_v;
+%         %mixture 99.9% model and 0.1% unif
+%         %proba_choice = 0.99 .* proba_choice + 0.01/J;
+%     end
+% 
+%     function Pi=PDNProbit(X,~,~,theta)
+%         %True params
+%         alpha = theta(1);
+%         sigma = theta(2);
+%         omega = theta(3:3+K-1);
+%         %utility computation
+%         u_x = X.^alpha;
+%         v = zeros(J,1);
+%         unnorm_u = (opts.attrSign .* u_x)';
+%         for j=1:J
+%             u_y = u_x;
+%             u_y(j,:)=[];
+%             norm_coefs = sum(1 ./ (sigma + omega .* (u_x(j,:) + u_y)),1);%./(J-1);
+%             v(j) = norm_coefs * unnorm_u(:,j); 
+%         end
+% 
+%         Pi(data.y) = P(data.Mi,v,J);
+%         %mixture 99.9% model and 0.1% unif
+%         %proba_choice(y) = 0.99 .* proba_choice(y) + 0.01/J;
+%     end
+>>>>>>> Stashed changes
 
     function Pi=DN(X,theta)
         
         par=opts.LB;
-        if any(opts.LB(1:8)~=opts.UB(1:8))
-            par(opts.LB(1:8)~=opts.UB(1:8))=theta;%Set the unrestricted variables to be those passed to the function.
+        
+        if strcmp(opts.Prob,'GHK')
+            toEstimate=opts.LB(1:8)~=opts.UB(1:8);
+        else
+            toEstimate=opts.LB(1:6)~=opts.UB(1:6);    
+        end
+        
+        if any(toEstimate)
+            par(toEstimate)=theta;%Set the unrestricted variables to be those passed to the function.
         end
 
         s = par(2);
@@ -113,9 +181,18 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         f = @(x) (x.^a);
         %denom=@(x) (s + w*sum(x) );
         
+<<<<<<< Updated upstream
         %denom=@(x) (s + (w + w2*eye(length(x)))* x );
 
         denom=@(x) (s + vecnorm((w + w2*eye(length(x))).*x',b,2) ); %Note that w2 is the "extra" weight relative w. So in reporting results, add them together for w_i
+=======
+        %
+        if toEstimate(5)
+            denom=@(x) (s + vecnorm((w + w2*eye(length(x))).*x',b,2) ); %Note that w2 is the "extra" weight relative w. So in reporting results, add them together for w_i
+        else
+            denom=@(x) (s + (w + w2*eye(length(x)))* x ); %this line is not wrong, it just doesn't allow beta free, but allows w<0.
+        end
+>>>>>>> Stashed changes
         %denom=@(x) (s + ((w + w2*eye(length(x))).*x.^b').^(1/b) );
         
         %denom=@(x) (sigma + omega*norm(x,b) );
@@ -123,14 +200,25 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         sumv=cellfun(denom,X,'uniformoutput',false);
         v=cellfun(@rdivide,cellfun(f,X,'uniformoutput',false),sumv,'uniformoutput',false);
 
-        Pi = P(data.Mi,v,data.J); %y is Mi
+        
+        if ~strcmp(opts.Prob,'GHK')
+            P=eval(['@calcPi' opts.Prob]); %Construct function handle for probability function based on label in opts.Prob
+            Pi = P(data.Mi,v,data.J); %y is Mi
+        else %use GHK
+            if opts.setsize==1
+                Pi=calcPiGHKC(data.Mi,v,data.J,[par(7),par(8)]);
+            else
+                Pi=calcPiGHK(data.y,cell2mat(v)',[par(7),par(8)],opts.GHKdraws);
+            end
+        end
+        
     end
 
     function Pi=Range(X,theta)
  
         par=opts.LB;
-        if any(opts.LB(1:8)~=opts.UB(1:8))
-            par(opts.LB(1:8)~=opts.UB(1:8))=theta;%Set the unrestricted variables to be those passed to the function.
+        if any(opts.LB(1:6)~=opts.UB(1:6))
+            par(opts.LB(1:6)~=opts.UB(1:6))=theta;%Set the unrestricted variables to be those passed to the function.
         end
 
         s = par(2);
@@ -159,12 +247,71 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         %denom=@(x) (sigma + omega*norm(x,b) );
         %vecnorm(cell2mat(X)',2)
         sumv=cellfun(denom,X,'uniformoutput',false);
+<<<<<<< Updated upstream
         v=cellfun(@rdivide,cellfun(f,X,'uniformoutput',false),sumv,'uniformoutput',false);
 
+=======
+        numerator=cellfun(f,X,'uniformoutput',false);
+        v=cellfun(@rdivide,numerator,sumv,'uniformoutput',false);
+        
+        P=eval(['@calcPi' opts.Prob]);
+>>>>>>> Stashed changes
         Pi = P(data.Mi,v,data.J); %y is Mi
             
     end
 
+<<<<<<< Updated upstream
+=======
+function Pi=Ebb(X,prob,ebbc,theta)
+        
+        %theta is a vector, it could be made a matrix to speed up
+        %calculations of hierarchical effects
+    
+        par=opts.LB; %Set all parameters to the lower bound (i.e. set the restricted parameters).
+%         if any(opts.LB~=opts.UB)
+%             par(opts.LB~=opts.UB)=theta; %Set the unrestricted variables to be those passed to the function.
+%         end
+        
+        if any(opts.LB(1:6)~=opts.UB(1:6))
+            par(opts.LB(1:6)~=opts.UB(1:6))=theta; %Set the unrestricted variables to be those passed to the function.
+        end
+        
+        %extract parameters
+        s = par(2);
+        w = par(3); % all weights
+        a = par(4);
+        b = par(5);
+        wx = par(6); %extra weight on own
+        webb = par(1); %weight of ebb
+        
+       
+        if b<0
+            b=0.0000000001; %hack so that s.e. calculation (hessian()) can send negative b. In estimation, beta is restricted to be >0 so doesn't matter.
+        end
+
+        f = @(x) (x.^a);
+        %denom=@(x) (s + w*sum(x) );
+        
+        denom=@(x,ebb) ((s) + ((w+ webb*ebb) + wx*eye(length(x)))* x );
+        %denom=@(x,ebb) (s + ((w+ webb*ebb) + w2*eye(length(x)))* x );
+        %denom=@(x,ebb) (s + (w + w2*eye(length(x)))* x );
+        %denom=@(x,ebb) (s + (w2*eye(length(x)))*w*x );
+        
+        %denom=@(x) (s + vecnorm((w + w2*eye(length(x))).*x',b,2) ); %Note that w2 is the "extra" weight relative w. So in reporting results, add them together for w_i
+        %denom=@(x) (s + ((w + w2*eye(length(x))).*x.^b').^(1/b) );
+        
+        %denom=@(x) (sigma + omega*norm(x,b) );
+
+        sumv=cellfun(denom,X,ebbc,'uniformoutput',false);
+        numerator=cellfun(f,X,'uniformoutput',false);
+        v=cellfun(@rdivide,numerator,sumv,'uniformoutput',false);
+        eu=cellfun(@times,prob,v,'uniformoutput',false);
+        
+        P=eval(['@calcPi' opts.Prob]);
+        Pi = P(data.Mi,eu,data.J); %y is Mi
+    end
+
+>>>>>>> Stashed changes
     function Pi=RemiStand(X,theta)
         %True params
         alpha =theta(1);
@@ -205,7 +352,9 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
     end
 end
 
-function Pi=calcPiProbit(Mi,v,J)
+%Get Choice Probs given the model above
+
+function Pi=calcPiProbit(Mi,v,J,~)
 
     T=size(v,2);
     [x, w]=GaussHermite(100);
@@ -315,39 +464,30 @@ function Pi=calcPiGHKC(Mi,Z,J,c,E)
         Pi=cellfun(ghkfun,Vi,Li);  %cellify
 end
 
-% function Pi=calcPiGHK(y,Z,c,E)
-%         
-%         [T,J]=size(Z);
-% 
-%         L1 = tril(ones(J-1),0);
-%         L1(~~L1)=[1 c]; 
-%         L=[zeros(J-1,1) L1];
-%         L=[zeros(1,J); L];
-%         Omega=L*L';
-%         
-%         
-%         %Reset seed inside each evaluation of LL so that no noise inGHK over evaluations 
-%         myseed = 20110710;
-% 
-%         RandStream.setGlobalStream(RandStream('mt19937ar','seed',myseed));
-% 
-%         for t=1:T %do not parfor the GHK unless you check that the RNG is the same for each t on each call
-%             j=y(t);
-% 
-%             temp=eye(J-1); 
-%             Mi=[temp(:,1:j-1) -1*ones(J-1,1) temp(:,j:J-1)];
-% 
-%             Vi=Mi*Z(t,:)';
-%             %Vi=zeros(JJ-1,1);
-% 
-%                Li=chol(Mi*Omega(1:J,1:J)*Mi')';
-% 
-% 
-%             Pi(t)=ghktrain(Vi,Li,E);   %Sim Pi 
-% 
-% %                         temp=eye(J-1); 
-% %                         Mi=[temp(:,1:i-1) -1*ones(J-1,1) temp(:,i:J-1)];
-% 
-%             %Pi(t)=GHK(Li,Vi',R);
-%         end
-% end
+function Pi=calcPiGHK(y,Z,c,GHKdraws)
+        
+        [T,J]=size(Z);
+
+        L1 = tril(ones(J-1),0);
+        L1(~~L1)=[1 c]; 
+        L=[zeros(J-1,1) L1];
+        L=[zeros(1,J); L];
+        Omega=L*L';
+        
+        
+        for t=1:T %do not parfor the GHK unless you check that the RNG is the same for each t on each call
+            j=y(t);
+
+            temp=eye(J-1); 
+            Mi=[temp(:,1:j-1) -1*ones(J-1,1) temp(:,j:J-1)];
+
+            Vi=Mi*Z(t,:)';
+            %Vi=zeros(JJ-1,1);
+
+            Li=chol(Mi*Omega(1:J,1:J)*Mi')';
+
+
+            Pi(t)=ghktrain(Vi,Li,GHKdraws);   %Sim Pi 
+
+        end
+end

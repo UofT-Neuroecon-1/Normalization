@@ -11,6 +11,7 @@ LB.k=1;UB.k=1;
 LB.s=0;UB.s=inf;
 
 if strcmp(modelIn,'MNP')
+<<<<<<< Updated upstream
 %omega
 LB.w=0;UB.w=0;
 LB.w2=0;UB.w2=0;
@@ -26,6 +27,31 @@ LB.w2=0;UB.w2=0;
 LB.a=1;UB.a=1;
 LB.b=1;UB.b=1;
 opts.modelF='DN'; %use this for estimation
+=======
+    %omega
+    LB.w=0;UB.w=0;
+    LB.w2=0;UB.w2=0;
+    %kappa
+    LB.a=1;UB.a=1;
+    LB.b=1;UB.b=1;
+    opts.modelF='DN'; %use this for estimation
+elseif strcmp(modelIn,'Logit')
+    %omega
+    LB.w=0;UB.w=0;
+    LB.w2=0;UB.w2=0; 
+    %kappa
+    LB.a=1;UB.a=1;
+    LB.b=1;UB.b=1;
+    opts.modelF='DN'; %use this for estimation
+elseif strcmp(modelIn,'DN')
+    %omega
+    LB.w=-Inf;UB.w=inf;
+    LB.w2=0;UB.w2=0; 
+    %kappa
+    LB.a=1;UB.a=1;
+    LB.b=1;UB.b=1;
+    opts.modelF='DN'; %use this for estimation
+>>>>>>> Stashed changes
 elseif strcmp(modelIn,'DNb')
 %omega
 LB.w=0;UB.w=inf;
@@ -68,6 +94,23 @@ LB.b=1;UB.b=1;
 opts.modelF='Range'; %use this for estimation
 end
 
+<<<<<<< Updated upstream
+=======
+    %[1 
+    % c1 c3
+    % c2 c4 c5]% 
+    if strcmp(opts.Prob,'Probit') || opts.setsize~=0
+        disp('Restricting covariance matrix to be independent.')
+        LB.c=cind;
+        UB.c=cind;
+    elseif strcmp(opts.Prob,'Logit')
+        LB.c=[];
+        UB.c=[];
+    else
+        temp=-inf(Jmax-1);
+        temp=tril(temp,-1);
+        temp=temp(L~=0)';
+>>>>>>> Stashed changes
 
 %Define Covariance Matrix
 scale=.5; %Set scale of covariance matrix
@@ -81,6 +124,7 @@ cind=L(2:end)';
 % c2 c4 c5]% 
  
 
+<<<<<<< Updated upstream
 if strcmp(opts.Prob,'Probit') || strcmp(opts.Prob,'Logit') || opts.setsize~=0
     disp('Restricting covariance matrix to be independent.')
     LB.c=cind;
@@ -97,6 +141,16 @@ else
     myseed = 20110710; %Set seed for GHK
     RandStream.setGlobalStream(RandStream('mt19937ar','seed',myseed));
     E=rand(Jmax-1,opts.R); %Draw    
+=======
+%         myseed = 20110710; %Set seed for GHK
+%         RandStream.setGlobalStream(RandStream('mt19937ar','seed',myseed));
+%         opts.GHKdraws=rand(Jmax-1,opts.numGHKdraws); %Draw
+        
+        rng(1,'twister') % set random number seed
+        p = haltonset((Jmax-1),'Skip',1e3,'Leap',1e2);  %Halton Sequence
+        opts.GHKdraws=net(p,opts.numGHKdraws)';  
+    end
+>>>>>>> Stashed changes
 end
 
 if any(opts.Hier) %set scale hyperparameter(s) to be between 0 and inf. The mean or shape will be passed in the respective loation LB.par and UB.par

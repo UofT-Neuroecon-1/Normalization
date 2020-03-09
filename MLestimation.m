@@ -40,7 +40,14 @@ function out=MLestimation(dataIn,par0,opts)
         clear dataIn
     end
     
+<<<<<<< Updated upstream
         %% Choice set Properties
+=======
+
+    
+    %% Choice set Properties
+    opts.setsize=0; %Initially assume that choice set doesn't change size
+>>>>>>> Stashed changes
     for s=1:numel(data)
         T=size(data(s).X,2);
 
@@ -48,6 +55,11 @@ function out=MLestimation(dataIn,par0,opts)
         if ~all(data(s).J==Jm)
             opts.setsize=1; %set size is changing
         end
+        
+        if ~all(sort(data(s).X{1},'descend')==data(s).X{1})
+            warning('Choice alternatives not ordered')
+        end
+        
         
         % Pre-calculate Image Matrices for Chosen Alternative
         temp=eye(Jm-1); 
@@ -151,6 +163,13 @@ end
 
     display(sprintf('TolX: %g   TolFun: %g',options.TolX,options.TolFun));
 
+<<<<<<< Updated upstream
+=======
+%     if isempty(theta0)
+%         -LLfun(LB)
+%     end
+        
+>>>>>>> Stashed changes
     if opts.numInit==1
         %[thetah, maxLL, exitflags]=feval(optfun,opts.objfun,theta0,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
         %[thetah, maxLL, exitflags]=fminsearchbnd(opts.objfun,theta0,LB(LB~=UB),UB(LB~=UB),options);
@@ -159,6 +178,12 @@ end
         [thetah, maxLL, exitflags,~,~,grad,hess]=fmincon(opts.objfun,theta0,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
         i=1;
 
+<<<<<<< Updated upstream
+=======
+        parh=LB; 
+        parh(LB~=UB)=thetah(i,:);
+
+>>>>>>> Stashed changes
         fprintf('Value of the log-likelihood function at convergence: %9.4f \n',-maxLL(i));
         exitflag=exitflags(i);
         disp(['Estimation took ' num2str(toc./60) ' minutes.']);
@@ -227,7 +252,7 @@ end
     display('Estimates saved to disk');
     
     if opts.ses==1
-    disp('Calculating finite-difference hessian and taking inverse for standard errors.');
+    disp('Calculating finite-difference hessian and taking inverse for standard errors...');
     H=hessian(@(x) -LLfun(x),thetah(i,:));
     covh=inv(-H);
     se=sqrt(diag(covh))';
@@ -272,6 +297,21 @@ end
             toEstimate=opts.LB(1:6)~=opts.UB(1:6);
             
             par(toEstimate)=theta(1:end-sum(opts.Hier));
+<<<<<<< Updated upstream
+=======
+            
+            
+            rng(1,'twister') % set random number seed
+            R=opts.R; %200
+            S=opts.cluster;
+
+            for k=1:sum(opts.Hier)
+                p = haltonset(1,'Skip',1e3,'Leap',1e2);  %Halton Sequence
+                temp3=par(opts.Hier==1);
+                temp4=theta(end-sum(opts.Hier)+1:end);
+                draws(:,:,k)=reshape(gaminv(net(p,R*S),temp3(k),temp4(k)),R,S); %need to draw independently for each subject for consistency and asymptotic normality
+            end
+>>>>>>> Stashed changes
 
             rng(1,'twister') % set random number seed
             
@@ -283,6 +323,7 @@ end
             
             Pi=zeros(length(data(s).X),S,R);
 
+<<<<<<< Updated upstream
             parfor s=1:S
             for r=1:R
                 particle=struct();
@@ -291,6 +332,16 @@ end
                 particle.theta=temp2(toEstimate);
                 Pi(:,s,r)=ProbaChoice(data(s), particle, opts );            
             end
+=======
+            parfor subj=1:S 
+                for r=1:R
+                    particle=struct();
+                    temp2=par;
+                    temp2(opts.Hier)=squeeze(draws(r,subj,:));
+                    particle.theta=temp2(toEstimate);
+                    Pi(:,subj,r)=ProbaChoice(data(subj), particle, opts );            
+                end
+>>>>>>> Stashed changes
             end
 
             %nLL=-sum(log(mean(prod(Pi),2))); Too many zeros, line below corrects numerical issues
