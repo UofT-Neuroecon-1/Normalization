@@ -30,102 +30,57 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
     Pi=F(data.X,data.Z,data.W,particle.theta); %Get Probs
  
     Pi(Pi==0)=realmin;  % make sure that the probability of a choice is not 0
-    
 
-%     function Pi=Logit(X,~,~,theta)
-%         %True params
-%         alpha = theta(1);
-%         Beta = (opts.attrSign .* theta(2:end))';
-%         %utility computation
-%         u_x = X.^alpha;
-%         v = zeros(J,1);
-%         for j=1:J
-%             v(j) = sum(Beta .* u_x(j,:)'); 
-%         end
-%         v = v - max(v); %avoid overflow
-%         sum_exp_v = sum(exp(v));
-%         Pi = exp(v)./sum_exp_v;
-%         %mixture 99.9% model and 0.1% unif
-%         Pi = 0.99 .* Pi + 0.01/J;
-%     end
-% 
-%     function Pi=PDNNew(X,~,~,theta)
-%         %True params
-%         alpha = theta(1);
-%         sigma = theta(2);
-%         omega = theta(3:3+K-1);
-%         %utility computation
-%         u_x = X.^alpha;
-%         v = zeros(J,1);
-%         unnorm_u = (opts.attrSign .* u_x)';
-%         for j=1:J
-%             u_y = u_x;
-%             u_y(j,:)=[];
-%             norm_coefs = sum(1 ./ (sigma + omega .* (u_x(j,:) + u_y)),1);%./(J-1);
-%             v(j) = norm_coefs * unnorm_u(:,j); 
-%         end
-%         v = v - max(v); %avoid overflow
-%         sum_exp_v = sum(exp(v));
-%         Pi = exp(v)./sum_exp_v;
-%         %mixture 99.9% model and 0.1% unif
-%         %proba_choice = 0.99 .* proba_choice + 0.01/J;
-%     end
-% 
-%     function Pi=PDNProbit(X,~,~,theta)
-%         %True params
-%         alpha = theta(1);
-%         sigma = theta(2);
-%         omega = theta(3:3+K-1);
-%         %utility computation
-%         u_x = X.^alpha;
-%         v = zeros(J,1);
-%         unnorm_u = (opts.attrSign .* u_x)';
-%         for j=1:J
-%             u_y = u_x;
-%             u_y(j,:)=[];
-%             norm_coefs = sum(1 ./ (sigma + omega .* (u_x(j,:) + u_y)),1);%./(J-1);
-%             v(j) = norm_coefs * unnorm_u(:,j); 
-%         end
-% 
-%         Pi(data.y) = P(data.Mi,v,J);
-%         %mixture 99.9% model and 0.1% unif
-%         %proba_choice(y) = 0.99 .* proba_choice(y) + 0.01/J;
-%     end
 
     function Pi=DN(X,~,~,theta)
         
-        par=opts.LB;
+        par=[theta repmat(opts.thetaR,size(theta,1),1)];
+        names=[opts.toEst opts.toRestr];
         
-        if strcmp(opts.Prob,'GHK')
-            toEstimate=opts.LB(1:8)~=opts.UB(1:8);
-        else
-            toEstimate=opts.LB(1:6)~=opts.UB(1:6);    
-        end
+        s = par(:,strcmp(names, 'sigma'));
+        w = par(:,startsWith(names, 'omega')); % all weights
+        a = par(:,strcmp(names, 'alpha'));
+        wx= par(:,strcmp(names, 'wx')); %additional own weight
         
-        if any(toEstimate)
-            par(toEstimate)=theta;%Set the unrestricted variables to be those passed to the function.
-        end
-
-        s = par(2);
-        w = par(3); % all weights
-        a = par(4);
-        b = par(5);
-        w2= par(6); %additional own weight
-        
-        if b<0
-            b=0.0000000001; %hack so that s.e. calculation (hessian()) can send negative b. In estimation, beta is restricted to be >0 so doesn't matter.
-        end
-
-        f = @(x) (x.^a);
+        f = @(x) (x.^(a'));
         %denom=@(x) (s + w*sum(x) );
         
         %
-        if toEstimate(5)
-            denom=@(x) (s + vecnorm((w + w2*eye(length(x))).*x',b,2) ); %Note that w2 is the "extra" weight relative w. So in reporting results, add them together for w_i
+        if any(strcmp(opts.toEst, 'beta'))
+            b = par(strcmp(names, 'beta'));
+            if b<0
+                b=0.0000000001; %hack so that s.e. calculation (hessian()) can send negative b. In estimation, beta is restricted to be >0 so doesn't matter.
+            end
+            weights=w*ones(3,3);
+            ind=eye(3);
+            if any(strcmp(opts.toEst, 'wx'))
+                weights(logical(ind(:)))=wx;
+            end
+            
+            denom=@(x) (s + vecnorm(weights.*x',b,2) ); %this line includes the weight in the norm, so (w*x)^b.
+            %denom=@(x) (s + sum(weights.*(x.^b'),2).^(1/b) ); %messed up
+            
+            %Note that beloe wx is the "extra" weight relative w. So in
+            %reporting results, add them together for w_i. Can be messed up when w<0 and taking norm (i.e. abs())
+            %denom=@(x) (s + vecnorm((w + wx*eye(length(x))).*x',b,2) ); %this line includes the weight in the norm, so (w*x)^b.
+            %denom=@(x) (s + sum(((w + wx*eye(length(x))).*x).^b',2).^(1/b) ); %this line does not include the abs(weight) in the norm, so w*x^b.
+            %denom=@(x) (s + sum((w + wx*eye(length(x))).*(x.^b'),2).^(1/b) ); %this line does not include the abs(weight) in the norm, so w*x^b.
+        elseif any(strcmp(opts.toEst, 'wx'))  
+            weights=w*ones(3,3);
+            ind=eye(3);
+            if any(strcmp(opts.toEst, 'wx'))
+                weights(logical(ind(:)))=wx;
+            end
+            denom=@(x) (s + vecnorm(weights.*x',1,2) ); %this line is not wrong, it just doesn't allow beta free, but allows w<0.
         else
-            denom=@(x) (s + (w + w2*eye(length(x)))* x ); %this line is not wrong, it just doesn't allow beta free, but allows w<0.
+            if size(w,2)==1
+                weight=@(x) repmat(w,1,length(x));
+            else
+                weight=@(x) w;
+            end
+            denom=@(x) (s + weight(x)*x)'; %if w is a scalar, then expand to vector and take vector product
         end
-        %denom=@(x) (s + ((w + w2*eye(length(x))).*x.^b').^(1/b) );
+        
         
         %denom=@(x) (sigma + omega*norm(x,b) );
         %vecnorm(cell2mat(X)',2)
@@ -136,12 +91,13 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         
         if ~strcmp(opts.Prob,'GHK')
             P=eval(['@calcPi' opts.Prob]); %Construct function handle for probability function based on label in opts.Prob
-            Pi = P(data.Mi,v,data.J); %y is Mi
+            Pi = P(data.Mi,v,data.J,opts.scale); %y is Mi
         else %use GHK
+
             if opts.setsize==1
-                Pi=calcPiGHKC(data.Mi,v,data.J,[par(7),par(8)]);
+                Pi=calcPiGHKC(data.Mi,v,data.J,par(find(startsWith(names, 'c'))));
             else
-                Pi=calcPiGHK(data.y,cell2mat(v)',[par(7),par(8)],opts.GHKdraws);
+                Pi=calcPiGHK(data.y,cell2mat(v)',par(find(startsWith(names, 'c'))),opts.GHKdraws);
             end
         end
         
@@ -149,16 +105,14 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
 
     function Pi=Range(X,~,~,theta)
  
-        par=opts.LB;
-        if any(opts.LB(1:6)~=opts.UB(1:6))
-            par(opts.LB(1:6)~=opts.UB(1:6))=theta;%Set the unrestricted variables to be those passed to the function.
-        end
-
-        s = par(2);
-        w = par(3); % all weights
-        a = par(4);
-        b = par(5);
-        w2= par(6); %additional own weight
+        par=[theta opts.thetaR];
+        names=[opts.toEst opts.toRestr];
+        
+        s = par(find(strcmp(names, 'sigma')));
+        w = par(find(strcmp(names, 'omega'))); % all weights
+        a = par(find(strcmp(names, 'alpha')));
+        b = par(find(strcmp(names, 'beta')));
+        wx= par(find(strcmp(names, 'wx'))); %additional own weight
         
 %             kappa=par(1:Q);
 %             sigma=par(Q+1);
@@ -193,22 +147,15 @@ function Pi=Ebb(X,prob,ebbc,theta)
         %theta is a vector, it could be made a matrix to speed up
         %calculations of hierarchical effects
     
-        par=opts.LB; %Set all parameters to the lower bound (i.e. set the restricted parameters).
-%         if any(opts.LB~=opts.UB)
-%             par(opts.LB~=opts.UB)=theta; %Set the unrestricted variables to be those passed to the function.
-%         end
+        par=[theta opts.thetaR];
+        names=[opts.toEst opts.toRestr];
         
-        if any(opts.LB(1:6)~=opts.UB(1:6))
-            par(opts.LB(1:6)~=opts.UB(1:6))=theta; %Set the unrestricted variables to be those passed to the function.
-        end
-        
-        %extract parameters
-        s = par(2);
-        w = par(3); % all weights
-        a = par(4);
-        b = par(5);
-        wx = par(6); %extra weight on own
-        webb = par(1); %weight of ebb
+        s = par(find(strcmp(names, 'sigma')));
+        w = par(find(strcmp(names, 'omega'))); % all weights
+        a = par(find(strcmp(names, 'alpha')));
+        b = par(find(strcmp(names, 'beta')));
+        wx= par(find(strcmp(names, 'wx'))); %additional own weight
+        wx= par(find(strcmp(names, 'webb'))); %additional own weight
         
        
         if b<0
@@ -236,50 +183,11 @@ function Pi=Ebb(X,prob,ebbc,theta)
         P=eval(['@calcPi' opts.Prob]);
         Pi = P(data.Mi,eu,data.J); %y is Mi
     end
-
-    function Pi=RemiStand(X,theta)
-        %True params
-        alpha =theta(1);
-        sigma =theta(2);
-        Beta = (opts.attrSign .* theta(subj,3:3+K-1))';
-        %utility computation
-        x_mean = mean(X,1);
-        sd_x = std(X,[],1) * alpha + sigma;
-        x_standardized = (X - x_mean) ./ sd_x;
-        attr_signal = 1 ./ (1+exp(-x_standardized));
-        v = attr_signal * Beta;
-        v = v - max(v); %avoid overflow
-        sum_exp_v = sum(exp(v));
-        Pi = exp(v)./sum_exp_v;
-        %mixture 99.9% model and 0.1% unif
-        Pi = 0.99 .* Pi + 0.01/J;
-    end
-
-    function Pi=HierarchicalProbit(X,theta)
-        % [alpha sigma Omega(1,K)]
-        %True params
-        alpha = theta(1);
-        sigma = theta(2);
-        Beta = (opts.attrSign)';
-        omega = theta(subj,3:3+K-1);
-        %utility computation
-        u_x = X.^alpha;
-        v = zeros(J,1);
-        unnorm_u = (opts.attrSign .* u_x)';
-        for j=1:J
-            u_y = u_x;
-            u_y(j,:)=[];
-            norm_coefs = sum(1 ./ (sigma + omega .* (u_x(j,:) + u_y) ),1);%./(J-1);
-            v(j) = norm_coefs * unnorm_u(:,j); 
-        end
-       
-        Pi = P(v,J,opts.NormDraw);
-    end
 end
 
 %Get Choice Probs given the model above
 
-function Pi=calcPiProbit(Mi,v,J,~)
+function Pi=calcPiProbit(Mi,v,J,scale)
 
     T=size(v,2);
     
@@ -287,7 +195,7 @@ function Pi=calcPiProbit(Mi,v,J,~)
     if length(v{1})==2 %Binary Choice
         if all(J==J(1)) % all choice sets same size, then all trials together (much faster)   
             vi=cellfun(@mtimes, Mi, v)';
-            Pi=normcdf(-vi);
+            Pi=normcdf(-vi./scale);
         else
             error('Different size choice sets. This Probit code doesnt work for binary choice, use Logit')
         end
@@ -331,10 +239,11 @@ function Pi=calcPiProbit(Mi,v,J,~)
     end
 end
 
-function Pi=calcPiLogit(Mi,v,~)
+function Pi=calcPiLogit(Mi,v,~,scale)
         vi=cellfun(@mtimes, Mi, v, 'UniformOutput', false);
-        sum_exp_v = sum(exp(cell2mat(vi)),1)';
-        Pi = 1./(1+sum_exp_v);
+        %cellfun(@exp,vi','UniformOutput', false)
+        sum_exp_v = cellfun(@(x) sum(exp(x./scale),1),vi,'UniformOutput', false);
+        Pi = 1./(1+cell2mat(sum_exp_v'));
 end
             
 
