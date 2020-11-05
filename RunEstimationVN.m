@@ -32,26 +32,8 @@ backup_file = '';
 
 %load data/ExampleDataSS
 %load data/ExampleData3
-%load ~/Dropbox/Projects/Ebbinghaus/code/testdataout.mat
-%load ~/Dropbox/Projects/Ebbinghaus/code/subjtestdataout.mat
-%load ~/Dropbox/Projects/Ebbinghaus/code/subjtestdataout2.mat
-%load ~/Dropbox/Projects/Ebbinghaus/code/realdatabalancedout.mat
-%load ~/Dropbox/Projects/Ebbinghaus/code/realdatabalancedout.mat
-%load ~/Dropbox/Projects/IIA-NHB/gluth/code/gluthdataout.mat
-%d='~/Dropbox/Projects/IIA-NHB/antonio/';
-d='~/Dropbox/Projects/IIA-NHB/kenway/';
-%d='~/Dropbox/Projects/IIA-NHB/gluth/';
-%d='~/Dropbox/Projects/Adaptation/';
-
-%load([d,'kenwaydataout.mat']);
-load([d,'ExpDataSS.mat']);
-
-%load([d,'gluthdataout.mat']);
-%load([d,'gluthsimdataout.mat']);
-%load([d,'glutheyedataout.mat']);
-%load([d,'antoniodataoutHALF.mat']);
-%load([d,'antoniodataoutFULL.mat']);
-
+load data/ExpDataSS
+%load data/ExpData3
 
 if ~isfield(data,'Z')
     data(1).('Z') = [];

@@ -12960,3 +12960,68 @@ Estimates saved to disk
 Calculating finite-difference hessian and taking inverse for standard errors...
 Standard Errors:
 sigma:0.017346
+[Warning: Name is nonexistent or not a directory: /Users/ryanwebb/Documents/GitHub/Normalization/../EstimationAdaptive] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('path', '/Applications/MATLAB_R2019b.app/toolbox/matlab/general/path.m', 109)" style="font-weight:bold">path</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2019b.app/toolbox/matlab/general/path.m',109,0)">line 109</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('addpath', '/Applications/MATLAB_R2019b.app/toolbox/matlab/general/addpath.m', 86)" style="font-weight:bold">addpath</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2019b.app/toolbox/matlab/general/addpath.m',86,0)">line 86</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 7)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',7,0)">line 7</a>)] 
+{Unrecognized function or variable 'data'.
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 38)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',38,0)">line 38</a>)
+if ~isfield(data,'Z')
+} 
+RunEstimationVN
+[Warning: Name is nonexistent or not a directory: /Users/ryanwebb/Documents/GitHub/Normalization/../EstimationAdaptive] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('path', '/Applications/MATLAB_R2019b.app/toolbox/matlab/general/path.m', 109)" style="font-weight:bold">path</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2019b.app/toolbox/matlab/general/path.m',109,0)">line 109</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('addpath', '/Applications/MATLAB_R2019b.app/toolbox/matlab/general/addpath.m', 86)" style="font-weight:bold">addpath</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2019b.app/toolbox/matlab/general/addpath.m',86,0)">line 86</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 7)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',7,0)">line 7</a>)] 
+Restricting covariance matrix to be independent.
+Initial Values:
+    0.7830    0.0270
+
+Start estimation
+# of Clusters: 30 
+# of Observations per Cluster: 8100 
+Size of initial sample for starting values: 1 
+
+ans =
+
+  1×1 <a href="matlab:helpPopup cell" style="font-weight:bold">cell</a> array
+
+    {'DN'}
+
+
+ans =
+
+    'Probit'
+
+
+ans =
+
+     0
+
+Using Constrained Quasi-Newton
+TolX:    TolFun: 
+                                            First-order      Norm of
+ Iter F-count            f(x)  Feasibility   optimality         step
+    0       3    1.009301e+04    0.000e+00    6.363e+03
+ x = 0.783       0.027
+    1      16    1.008283e+04    0.000e+00    3.627e+03    2.207e-02
+ x = 0.78392    0.049047
+    2      19    1.007408e+04    0.000e+00    2.193e+03    4.791e-01
+ x = 1.2601  -0.0041158
+    3      25    1.007073e+04    0.000e+00    4.956e+03    1.569e-01
+ x = 1.1033   0.0033035
+    4      28    1.006147e+04    0.000e+00    1.164e+03    3.099e-01
+ x = 0.79555    0.039802
+    5      31    1.005145e+04    0.000e+00    1.084e+03    1.549e-01
+ x = 0.9498    0.025431
+    6      34    1.005005e+04    0.000e+00    3.678e+02    5.092e-02
+ x = 1.0002    0.018096
+    7      37    1.004983e+04    0.000e+00    4.933e+01    1.983e-02
+ x = 0.98051    0.020544
+    8      40    1.004983e+04    0.000e+00    2.392e+00    1.610e-03
+ x = 0.9821    0.020316
+    9      43    1.004983e+04    0.000e+00    1.000e-01    5.790e-05
+ x = 0.98216    0.020306
+   10      46    1.004983e+04    0.000e+00    2.001e-02    1.395e-04
+ x = 0.
