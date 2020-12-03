@@ -67,22 +67,18 @@ end
 opts.Models = {'DN'};
 
 %What is the form of the likelihood?
-%'linear': continuous dependent variable. Assumes that the 'target' is the
-%first alternative defined in data.X.
+%'linear': continuous dependent variable
 %'Logit': discrete dependent variable, logistic CDF
 %'Probit': discrete dependent variable, standard normal CDF
 %'GHK': discrete dependent variable, multivariate normal CDF
-opts.Prob='Linear'; %'Probit','Logit','GHK', 'HP' 
+opts.Prob='linear'; %'Probit','Logit','GHK', 'HP' 
 
-%Pool data across subjects, or estimate within:
 opts.WithinSubject=0;
-
-%And if pooling, allow hierarchical model?
 opts.Hier={}; %which parameters to make hierarchical: kappa, sigma, omega, alpha, beta;
 %opts.Hier={'sigma','omega'};
 opts.HierDist={'gamma','normal'};
 
-opts.cluster=length(data); % each subject in own cluster
+opts.cluster=length(data); % each in own cluster
 
 %%%%Initial Parameter Values (the number of elements must match the number
 %%%%of parameters needed in the model above, +1 for every hierarchical
@@ -91,7 +87,7 @@ opts.cluster=length(data); % each subject in own cluster
 theta0=[.783    0.027];
 
 %%%%Estimation Specific Parameters
-%for particle filter (ignore if using ML)
+%for particle filter
 opts.G = 3; % Number of particles group
 opts.P = 128; % Number of particles per group
 opts.Adaptive = true; % Use the adaptive SMC (see Durham, Geweke 2014).
@@ -121,7 +117,7 @@ end
 clear k
 
 %Save format
-opts.Tag = 'Adaptation'; % This tag will be added to the output file
+opts.Tag = 'StndPDN'; % This tag will be added to the output file
 opts.savefile = ['Analysis' filesep opts.Tag sprintf('-%.0fx%.0f-M%.0f-',opts.G,opts.P,opts.Msteps) datestr(datetime('now'),'yyyy-mm-dd-HH.MM') '.mat'];
 if ~exist('Analysis','dir')
     mkdir('Analysis')
@@ -141,8 +137,7 @@ else
 
     save([d,'MLEout',opts.Models{:},opts.Prob,'.mat'])
 end
-
-%% Model Output
+%%
 
 if opts.WithinSubject
     for s=1:numel(data)

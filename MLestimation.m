@@ -82,15 +82,16 @@ function out=MLestimation(dataIn,par0,opts)
             warning('Choice alternatives not ordered')
         end
         
-        
-        % Pre-calculate Image Matrices for Chosen Alternative
-        temp=eye(Jm-1); 
-        for i=1:Jm
-            M{i}=[temp(:,1:i-1) -1*ones(Jm-1,1) temp(:,i:Jm-1)];
+        if ~strcmp(opts.Prob,'Linear')
+            % Pre-calculate Image Matrices for Chosen Alternative
+            temp=eye(Jm-1); 
+            for i=1:Jm
+                M{i}=[temp(:,1:i-1) -1*ones(Jm-1,1) temp(:,i:Jm-1)];
+            end
+            for t=1:T
+                data(s).Mi{t}=M{data(s).y(t)}(1:data(s).J(t)-1,1:data(s).J(t)); 
+            end  
         end
-        for t=1:T
-            data(s).Mi{t}=M{data(s).y(t)}(1:data(s).J(t)-1,1:data(s).J(t)); 
-        end      
     end
      
    alg='fmincon';

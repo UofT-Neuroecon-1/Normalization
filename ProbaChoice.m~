@@ -88,18 +88,17 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         numerator=cellfun(f,X,'uniformoutput',false);
         v=cellfun(@rdivide,numerator,sumv,'uniformoutput',false);
 
-        switch opts.Prob
-            case 'GHK'
-                if opts.setsize==1
-                    Pi=calcPiGHKC(data.Mi,v,data.J,par(find(startsWith(names, 'c'))));
-                else
-                    Pi=calcPiGHK(data.y,cell2mat(v)',par(find(startsWith(names, 'c'))),opts.GHKdraws);
-                end
-            case 'Linear'
-                Pi=calcPiLinear(data.y,cell2mat(v)');
-            otherwise               
-                P=eval(['@calcPi' opts.Prob]); %Construct function handle for probability function based on label in opts.Prob
-                Pi = P(data.Mi,v,data.J,opts.scale); %y is Mi
+        
+        if ~strcmp(opts.Prob,'GHK')
+            P=eval(['@calcPi' opts.Prob]); %Construct function handle for probability function based on label in opts.Prob
+            Pi = P(data.Mi,v,data.J,opts.scale); %y is Mi
+        else %use GHK
+
+            if opts.setsize==1
+                Pi=calcPiGHKC(data.Mi,v,data.J,par(find(startsWith(names, 'c'))));
+            else
+                Pi=calcPiGHK(data.y,cell2mat(v)',par(find(startsWith(names, 'c'))),opts.GHKdraws);
+            end
         end
         
     end
@@ -340,8 +339,13 @@ function Pi=calcPiGHK(y,Z,c,GHKdraws)
         end
 end
 
-function Pi=calcPiLinear(y,v)
-       
-        logPi =  -.5*log(2*pi) - log(sigma) - .5*sigma^(-2) *(y-v(:,1))^2;
-        Pi=exp(log(Pi));
+function Pi=calcPiLinear(y,Z)
+        
+        vi=cellfun(@mtimes, Mi, v, 'UniformOutput', false);
+        %cellfun(@exp,vi','UniformOutput', false)
+        sum_exp_v = cellfun(@(x) sum(exp(x./scale),1),vi,'UniformOutput', false);
+        logPi =  1/(sqrt(2*pi*sigma^2)) * exp( ((y - f())^2))/(2*sigma^2));
+        logPi =  -.5*log(2*pi) -log(sigma) -log(sigma);
+        
+        1./(1+cell2mat(sum_exp_v'));
 end

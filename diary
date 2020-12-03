@@ -13024,4 +13024,199 @@ TolX:    TolFun:
     9      43    1.004983e+04    0.000e+00    1.000e-01    5.790e-05
  x = 0.98216    0.020306
    10      46    1.004983e+04    0.000e+00    2.001e-02    1.395e-04
- x = 0.
+ x = 0.[Warning: Name is nonexistent or not a directory: /Users/ryanwebb/Documents/GitHub/EstimationAdaptive] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('path', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m', 109)" style="font-weight:bold">path</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m',109,0)">line 109</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('addpath', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m', 86)" style="font-weight:bold">addpath</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m',86,0)">line 86</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 7)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',7,0)">line 7</a>)] 
+<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',40,1)">40  </a>if ~isfield(data,'Z')
+if system_dependent('IsDebugMode')==1, dbquit all; end
+RunEstimationVN
+[Warning: Name is nonexistent or not a directory: /Users/ryanwebb/Documents/GitHub/EstimationAdaptive] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('path', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m', 109)" style="font-weight:bold">path</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m',109,0)">line 109</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('addpath', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m', 86)" style="font-weight:bold">addpath</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m',86,0)">line 86</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 7)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',7,0)">line 7</a>)] 
+if system_dependent('IsDebugMode')==1, dbcont; end
+[Warning: Choice alternatives not ordered] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('MLestimation', '/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m', 82)" style="font-weight:bold">MLestimation</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m',82,0)">line 82</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 139)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',139,0)">line 139</a>)] 
+{Index exceeds array bounds.
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('MLestimation', '/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m', 92)" style="font-weight:bold">MLestimation</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m',92,0)">line 92</a>)
+            data(s).Mi{t}=M{data(s).y(t)}(1:data(s).J(t)-1,1:data(s).J(t));
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 139)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',139,0)">line 139</a>)
+    MLEout = MLestimation(data,theta0,opts);
+} 
+RunEstimationVN
+[Warning: Name is nonexistent or not a directory: /Users/ryanwebb/Documents/GitHub/EstimationAdaptive] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('path', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m', 109)" style="font-weight:bold">path</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m',109,0)">line 109</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('addpath', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m', 86)" style="font-weight:bold">addpath</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m',86,0)">line 86</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 7)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',7,0)">line 7</a>)] 
+[Warning: Choice alternatives not ordered] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('MLestimation', '/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m', 82)" style="font-weight:bold">MLestimation</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m',82,0)">line 82</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 139)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',139,0)">line 139</a>)] 
+{Reference to non-existent field 'Model'.
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('MLestimation', '/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m', 85)" style="font-weight:bold">MLestimation</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m',85,0)">line 85</a>)
+        if ~strcmp(opts.Model,'Linear')
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 139)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',139,0)">line 139</a>)
+    MLEout = MLestimation(data,theta0,opts);
+} 
+RunEstimationVN
+[Warning: Name is nonexistent or not a directory: /Users/ryanwebb/Documents/GitHub/EstimationAdaptive] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('path', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m', 109)" style="font-weight:bold">path</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m',109,0)">line 109</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('addpath', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m', 86)" style="font-weight:bold">addpath</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m',86,0)">line 86</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 7)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',7,0)">line 7</a>)] 
+[Warning: Choice alternatives not ordered] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('MLestimation', '/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m', 82)" style="font-weight:bold">MLestimation</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m',82,0)">line 82</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 139)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',139,0)">line 139</a>)] 
+{Index exceeds array bounds.
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('MLestimation', '/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m', 92)" style="font-weight:bold">MLestimation</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m',92,0)">line 92</a>)
+                data(s).Mi{t}=M{data(s).y(t)}(1:data(s).J(t)-1,1:data(s).J(t));
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 139)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',139,0)">line 139</a>)
+    MLEout = MLestimation(data,theta0,opts);
+} 
+RunEstimationVN
+[Warning: Name is nonexistent or not a directory: /Users/ryanwebb/Documents/GitHub/EstimationAdaptive] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('path', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m', 109)" style="font-weight:bold">path</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m',109,0)">line 109</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('addpath', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m', 86)" style="font-weight:bold">addpath</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m',86,0)">line 86</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 7)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',7,0)">line 7</a>)] 
+[Warning: Choice alternatives not ordered] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('MLestimation', '/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m', 82)" style="font-weight:bold">MLestimation</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m',82,0)">line 82</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 139)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',139,0)">line 139</a>)] 
+if system_dependent('IsDebugMode')==1, dbquit all; end
+RunEstimationVN
+[Warning: Name is nonexistent or not a directory: /Users/ryanwebb/Documents/GitHub/EstimationAdaptive] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('path', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m', 109)" style="font-weight:bold">path</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m',109,0)">line 109</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('addpath', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m', 86)" style="font-weight:bold">addpath</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m',86,0)">line 86</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 7)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',7,0)">line 7</a>)] 
+[Warning: Choice alternatives not ordered] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('MLestimation', '/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m', 82)" style="font-weight:bold">MLestimation</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m',82,0)">line 82</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 139)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',139,0)">line 139</a>)] 
+if system_dependent('IsDebugMode')==1, dbcont; end
+Initial Values:
+    0.7830    0.0270
+
+Start estimation
+# of Clusters: 129 
+# of Observations per Cluster: 15480 
+Size of initial sample for starting values: 1 
+
+ans =
+
+  1×1 <a href="matlab:helpPopup cell" style="font-weight:bold">cell</a> array
+
+    {'DN'}
+
+
+ans =
+
+    'Linear'
+
+
+ans =
+
+     0
+
+Using Constrained Quasi-Newton
+TolX:    TolFun: 
+{Reference to non-existent field 'Mi'.
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('ProbaChoice/DN', '/Users/ryanwebb/Documents/GitHub/Normalization/ProbaChoice.m', 94)" style="font-weight:bold">ProbaChoice/DN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/ProbaChoice.m',94,0)">line 94</a>)
+            Pi = P(data.Mi,v,data.J,opts.scale); %y is Mi
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('ProbaChoice', '/Users/ryanwebb/Documents/GitHub/Normalization/ProbaChoice.m', 30)" style="font-weight:bold">ProbaChoice</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/ProbaChoice.m',30,0)">line 30</a>)
+    Pi=F(data.X,data.Z,data.W,particle.theta); %Get Probs
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('MLestimation/LLfun', '/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m', 335)" style="font-weight:bold">MLestimation/LLfun</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m',335,0)">line 335</a>)
+            Pi=ProbaChoice(data, particle, opts );
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('fmincon', '/Applications/MATLAB_R2018b.app/toolbox/shared/optimlib/fmincon.p', 546)" style="font-weight:bold">fmincon</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/shared/optimlib/fmincon.p',546,0)">line 546</a>)
+      initVals.f = feval(funfcn{3},X,varargin{:});
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('MLestimation', '/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m', 191)" style="font-weight:bold">MLestimation</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m',191,0)">line 191</a>)
+        [thetah, nLL,
+        exitflags,~,~,grad,hess]=fmincon(opts.objfun,theta0,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 139)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',139,0)">line 139</a>)
+    MLEout = MLestimation(data,theta0,opts);
+
+Caused by:
+    Failure in initial objective function evaluation. FMINCON cannot continue.
+} 
+RunEstimationVN
+[Warning: Name is nonexistent or not a directory: /Users/ryanwebb/Documents/GitHub/EstimationAdaptive] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('path', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m', 109)" style="font-weight:bold">path</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m',109,0)">line 109</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('addpath', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m', 86)" style="font-weight:bold">addpath</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m',86,0)">line 86</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 7)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',7,0)">line 7</a>)] 
+[Warning: Choice alternatives not ordered] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('MLestimation', '/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m', 82)" style="font-weight:bold">MLestimation</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m',82,0)">line 82</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 139)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',139,0)">line 139</a>)] 
+Initial Values:
+    0.7830    0.0270
+
+Start estimation
+# of Clusters: 129 
+# of Observations per Cluster: 15480 
+Size of initial sample for starting values: 1 
+
+ans =
+
+  1×1 <a href="matlab:helpPopup cell" style="font-weight:bold">cell</a> array
+
+    {'DN'}
+
+
+ans =
+
+    'Linear'
+
+
+ans =
+
+     0
+
+Using Constrained Quasi-Newton
+TolX:    TolFun: 
+if system_dependent('IsDebugMode')==1, dbquit all; end
+RunEstimationVN
+[Warning: Name is nonexistent or not a directory: /Users/ryanwebb/Documents/GitHub/EstimationAdaptive] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('path', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m', 109)" style="font-weight:bold">path</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/path.m',109,0)">line 109</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('addpath', '/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m', 86)" style="font-weight:bold">addpath</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/matlab/general/addpath.m',86,0)">line 86</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 7)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',7,0)">line 7</a>)] 
+[Warning: Choice alternatives not ordered] 
+[> In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('MLestimation', '/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m', 82)" style="font-weight:bold">MLestimation</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/MLestimation.m',82,0)">line 82</a>)
+  In <a href="matlab:matlab.internal.language.introspective.errorDocCallback('RunEstimationVN', '/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m', 140)" style="font-weight:bold">RunEstimationVN</a> (<a href="matlab: opentoline('/Users/ryanwebb/Documents/GitHub/Normalization/RunEstimationVN.m',140,0)">line 140</a>)] 
+Initial Values:
+    0.7830    0.0270
+
+Start estimation
+# of Clusters: 129 
+# of Observations per Cluster: 15480 
+Size of initial sample for starting values: 1 
+
+ans =
+
+  1×1 <a href="matlab:helpPopup cell" style="font-weight:bold">cell</a> array
+
+    {'DN'}
+
+
+ans =
+
+    'Linear'
+
+
+ans =
+
+     0
+
+Using Constrained Quasi-Newton
+TolX:    TolFun: 
+{Error using <a href="matlab:matlab.internal.language.introspective.errorDocCallback('sigma', '/Applications/MATLAB_R2018b.app/toolbox/control/ctrlobsolete/sigma.m', 82)" style="font-weight:bold">sigma</a> (<a href="matlab: opentoline('/Applications/MATLAB_R2018b.app/toolbox/control/ctrlobsolete/sigma.m',82,0)">line 82</a>)
+Not enough input arguments.
+
+Error in <a href="matlab:matlab.internal.language.introspective.errorDocCallback('ProbaChoice>calcPiLinear', '/Users/ryanwebb/Documents/GitHub/Normalization/ProbaChoice.m', 345)" style="font-weight:bold">ProbaChoice>calcPiLinear</a> (<a href="matlab: opentoline('/Users/ryanwebb/
