@@ -32,10 +32,12 @@ backup_file = '';
 
 %load data/ExampleDataSS
 %load data/ExampleData3
-load data/ExpDataSS
+%load data/ExpDataSS
 %load data/ExpData3
 
-load ~/Dropbox/Projects/Adaptation/dataOut.mat
+%load ~/Dropbox/Projects/Adaptation/DiscreteChoiceExp/dataOut.mat
+load ~/Dropbox/Projects/Adaptation/DiscreteChoiceExp/dataOutContext.mat
+%load ~/Dropbox/Projects/Adaptation/DiscreteChoiceExp/dataOutBinary.mat
 
 if ~isfield(data,'Z')
     data(1).('Z') = [];
@@ -66,13 +68,21 @@ end
 %'DNw3'
 opts.Models = {'DN'};
 
+opts.toNorm=[1 0 1 1 0 0;
+    0 1 0 0 1 1
+    0 0 0 0 0 0
+    0 0 0 0 0 0
+    0 0 0 0 0 0
+    0 0 0 0 0 0]; %matrix which defines which alts are in the choice set (rows) and which alts to normalize them by (columns)
+%opts.toNorm=eye(3);   
+
 %What is the form of the likelihood?
 %'linear': continuous dependent variable. Assumes that the 'target' is the
 %first alternative defined in data.X.
 %'Logit': discrete dependent variable, logistic CDF
 %'Probit': discrete dependent variable, standard normal CDF
 %'GHK': discrete dependent variable, multivariate normal CDF
-opts.Prob='Linear'; %'Probit','Logit','GHK', 'HP' 
+opts.Prob='Logit'; %'Probit','Logit','GHK', 'HP' 
 
 %Pool data across subjects, or estimate within:
 opts.WithinSubject=0;
@@ -88,7 +98,7 @@ opts.cluster=length(data); % each subject in own cluster
 %%%%of parameters needed in the model above, +1 for every hierarchical
 %%%%parameter)
 
-theta0=[.783    0.027];
+theta0=[10    -0.027];
 
 %%%%Estimation Specific Parameters
 %for particle filter (ignore if using ML)

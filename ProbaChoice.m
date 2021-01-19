@@ -42,8 +42,7 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         a = par(:,strcmp(names, 'alpha'));
         wx= par(:,strcmp(names, 'wx')); %additional own weight
         
-        f = @(x) (x.^(a'));
-        %denom=@(x) (s + w*sum(x) );
+        f = @(x) (x(sum(opts.toNorm,2)>1).^(a'));
         
         %
         if any(strcmp(opts.toEst, 'beta'))
@@ -51,7 +50,7 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
             if b<0
                 b=0.0000000001; %hack so that s.e. calculation (hessian()) can send negative b. In estimation, beta is restricted to be >0 so doesn't matter.
             end
-            weights=w*ones(3,3);
+            weights=w*opts.toNorm;
             ind=eye(3);
             if any(strcmp(opts.toEst, 'wx'))
                 weights(logical(ind(:)))=wx;
@@ -66,19 +65,19 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
             %denom=@(x) (s + sum(((w + wx*eye(length(x))).*x).^b',2).^(1/b) ); %this line does not include the abs(weight) in the norm, so w*x^b.
             %denom=@(x) (s + sum((w + wx*eye(length(x))).*(x.^b'),2).^(1/b) ); %this line does not include the abs(weight) in the norm, so w*x^b.
         elseif any(strcmp(opts.toEst, 'wx'))  
-            weights=w*ones(3,3);
+            weights=w*opts.toNorm;
             ind=eye(3);
             if any(strcmp(opts.toEst, 'wx'))
                 weights(logical(ind(:)))=wx;
             end
-            denom=@(x) (s + vecnorm(weights.*x',1,2) ); %this line is not wrong, it just doesn't allow beta free, but allows w<0.
+            denom=@(x) (s + vecnorm(weights(sum(opts.toNorm,2)>1,:).*x',1,2) ); %this line is not wrong, it just doesn't allow beta free, but allows w<0.
         else
             if size(w,2)==1
-                weight=@(x) repmat(w,1,length(x));
+                weights=w*opts.toNorm;
             else
-                weight=@(x) w;
+                weights=w; warning('Check dimension of vector multiplication');
             end
-            denom=@(x) (s + weight(x)*x)'; %if w is a scalar, then expand to vector and take vector product
+            denom=@(x) (s + weights(sum(opts.toNorm,2)>1,:)*x); %if w is a scalar, then expand to vector and take vector product
         end
         
         
@@ -130,7 +129,7 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         f = @(x) (x.^a);
         %denom=@(x) (s + w*sum(x) );
         
-        denom=@(x) (s + w*(max(x)-w2*min(x)));
+        denom=@(x) (s + w*(max(x)-wx*min(x)));
         
         %denom=@(x) (sigma + omega*norm(x,b) );
         %vecnorm(cell2mat(X)',2)

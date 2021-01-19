@@ -42,8 +42,7 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         a = par(:,strcmp(names, 'alpha'));
         wx= par(:,strcmp(names, 'wx')); %additional own weight
         
-        f = @(x) (x.^(a'));
-        %denom=@(x) (s + w*sum(x) );
+        f = @(x) (x(sum(opts.toNorm,2)>1).^(a'));
         
         %
         if any(strcmp(opts.toEst, 'beta'))
@@ -51,7 +50,7 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
             if b<0
                 b=0.0000000001; %hack so that s.e. calculation (hessian()) can send negative b. In estimation, beta is restricted to be >0 so doesn't matter.
             end
-            weights=w*ones(3,3);
+            weights=w*opts.toNorm;
             ind=eye(3);
             if any(strcmp(opts.toEst, 'wx'))
                 weights(logical(ind(:)))=wx;
@@ -66,7 +65,7 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
             %denom=@(x) (s + sum(((w + wx*eye(length(x))).*x).^b',2).^(1/b) ); %this line does not include the abs(weight) in the norm, so w*x^b.
             %denom=@(x) (s + sum((w + wx*eye(length(x))).*(x.^b'),2).^(1/b) ); %this line does not include the abs(weight) in the norm, so w*x^b.
         elseif any(strcmp(opts.toEst, 'wx'))  
-            weights=w*ones(3,3);
+            weights=w*opts.toNorm;
             ind=eye(3);
             if any(strcmp(opts.toEst, 'wx'))
                 weights(logical(ind(:)))=wx;
@@ -76,7 +75,7 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
             if size(w,2)==1
                 weight=@(x) repmat(w,1,length(x));
             else
-                weight=@(x) w;
+                weight=@(x) w; error('Why is w a vector?'
             end
             denom=@(x) (s + weight(x)*x)'; %if w is a scalar, then expand to vector and take vector product
         end
@@ -88,17 +87,18 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         numerator=cellfun(f,X,'uniformoutput',false);
         v=cellfun(@rdivide,numerator,sumv,'uniformoutput',false);
 
-        
-        if ~strcmp(opts.Prob,'GHK')
-            P=eval(['@calcPi' opts.Prob]); %Construct function handle for probability function based on label in opts.Prob
-            Pi = P(data.Mi,v,data.J,opts.scale); %y is Mi
-        else %use GHK
-
-            if opts.setsize==1
-                Pi=calcPiGHKC(data.Mi,v,data.J,par(find(startsWith(names, 'c'))));
-            else
-                Pi=calcPiGHK(data.y,cell2mat(v)',par(find(startsWith(names, 'c'))),opts.GHKdraws);
-            end
+        switch opts.Prob
+            case 'GHK'
+                if opts.setsize==1
+                    Pi=calcPiGHKC(data.Mi,v,data.J,par(find(startsWith(names, 'c'))));
+                else
+                    Pi=calcPiGHK(data.y,cell2mat(v)',par(find(startsWith(names, 'c'))),opts.GHKdraws);
+                end
+            case 'Linear'
+                Pi=calcPiLinear(data.y,cell2mat(v)');
+            otherwise               
+                P=eval(['@calcPi' opts.Prob]); %Construct function handle for probability function based on label in opts.Prob
+                Pi = P(data.Mi,v,data.J,opts.scale); %y is Mi
         end
         
     end
@@ -339,13 +339,8 @@ function Pi=calcPiGHK(y,Z,c,GHKdraws)
         end
 end
 
-function Pi=calcPiLinear(y,Z)
-        
-        vi=cellfun(@mtimes, Mi, v, 'UniformOutput', false);
-        %cellfun(@exp,vi','UniformOutput', false)
-        sum_exp_v = cellfun(@(x) sum(exp(x./scale),1),vi,'UniformOutput', false);
-        logPi =  1/(sqrt(2*pi*sigma^2)) * exp( ((y - f())^2))/(2*sigma^2));
-        logPi =  -.5*log(2*pi) -log(sigma) -log(sigma);
-        
-        1./(1+cell2mat(sum_exp_v'));
+function Pi=calcPiLinear(y,v)
+       
+        logPi =  -.5*log(2*pi) - log(sigma) - .5*sigma^(-2) *(y-v(:,1))^2;
+        Pi=exp(log(Pi));
 end

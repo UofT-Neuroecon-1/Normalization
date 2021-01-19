@@ -70,7 +70,7 @@ function out=MLestimation(dataIn,par0,opts)
 
     
     %% Choice set Properties
-    opts.setsize=0; %Initially assume that choice set doesn't change size
+    opts.setsize=0; %Initially assume that choice set size doesn't change size
     for s=1:numel(data)
         T=length(data(s).y);
         Jm=max(data(s).J); %assumes each subject sees the biggest set. If not, must set opts.setsize to be max over ALL subjects.
