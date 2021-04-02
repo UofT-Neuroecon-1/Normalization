@@ -6,6 +6,7 @@ clear
 diary on
 addpath(['..' filesep 'EstimationAdaptive' filesep])
 addpath(['DERIVESTsuite' filesep])
+addpath(['FMINSEARCHBND' filesep])
 
 %% Load Backup
 % if you want to load a backup from a previous estimation (set to [] if
@@ -35,9 +36,14 @@ backup_file = '';
 %load data/ExpDataSS
 %load data/ExpData3
 
-%load ~/Dropbox/Projects/Adaptation/DiscreteChoiceExp/dataOut.mat
-load ~/Dropbox/Projects/Adaptation/DiscreteChoiceExp/dataOutContext.mat
-%load ~/Dropbox/Projects/Adaptation/DiscreteChoiceExp/dataOutBinary.mat
+
+%load ~/Dropbox/Projects/IIA-NHB/kenway/kenwaydataout.mat
+
+d='~/Dropbox/Projects/Adaptation/DiscreteChoiceExp/';
+%d='~/Dropbox/Projects/Adaptation/Continuous/';
+load([d,'dataOut.mat']) %all chocies
+%load([d,'dataOutContext.mat']) %only the context choices
+%load([d,'dataOutBinary.mat']) %only the binary choices
 
 if ~isfield(data,'Z')
     data(1).('Z') = [];
@@ -66,6 +72,7 @@ end
 %{'Ebb'}
 %{'Logit'}
 %'DNw3'
+
 opts.Models = {'DN'};
 
 opts.toNorm=[1 0 1 1 0 0;
@@ -74,15 +81,16 @@ opts.toNorm=[1 0 1 1 0 0;
     0 0 0 0 0 0
     0 0 0 0 0 0
     0 0 0 0 0 0]; %matrix which defines which alts are in the choice set (rows) and which alts to normalize them by (columns)
-%opts.toNorm=eye(3);   
+
+%  opts.toNorm=ones(3);   
 
 %What is the form of the likelihood?
-%'linear': continuous dependent variable. Assumes that the 'target' is the
+%'Linear': continuous dependent variable. Assumes that the 'target' is the
 %first alternative defined in data.X.
 %'Logit': discrete dependent variable, logistic CDF
 %'Probit': discrete dependent variable, standard normal CDF
 %'GHK': discrete dependent variable, multivariate normal CDF
-opts.Prob='Logit'; %'Probit','Logit','GHK', 'HP' 
+opts.Prob='Linear'; %'Probit','Logit','GHK', 'HP', 'Linear' 
 
 %Pool data across subjects, or estimate within:
 opts.WithinSubject=0;
@@ -98,8 +106,11 @@ opts.cluster=length(data); % each subject in own cluster
 %%%%of parameters needed in the model above, +1 for every hierarchical
 %%%%parameter)
 
-theta0=[10    -0.027];
-
+opts.numInit = 1; %1: run using gradient- method first at theta0. If >1, use random starting points with gradient free method.
+%theta0=[39.6721      -86.581      22.0963      31.3169];
+theta0 = [13 .1; 13 -.1];
+%theta0 = [13];
+    
 %%%%Estimation Specific Parameters
 %for particle filter (ignore if using ML)
 opts.G = 3; % Number of particles group
@@ -110,10 +121,9 @@ opts.ress_threshold = 0.8;
 
 %for ML
 opts.getP = false; %Set this to true if you just want to evaluate at initial parameter vector
-opts.numInit = 1; %1: run using gradient- method first at theta0. If >1, use random starting points with gradient free method.
-opts.R = 50000; %number of draws for hierchical
+opts.R = 10000; %number of draws for hierchical
 opts.numGHKdraws = 5000; %number of draws for GHK
-opts.ses = true; %calculate ses? Set to zero if you just want estimates (much faster)
+opts.ses = false; %calculate ses? Set to zero if you just want estimates (much faster)
 opts.Display='iter-detailed';
 
 %%%% Model specific parameters
@@ -141,6 +151,7 @@ end
 % Maximum Likelihood (Within)
 if opts.WithinSubject
     for s = 1:numel(data)
+        disp(['Estimate subject: ',num2str(s)])
         MLEout(s) = MLestimation(data(s),theta0,opts);
 
         save([d,'MLEout',opts.Models{:},opts.Prob,'WithinSubject','.mat'])
@@ -156,20 +167,30 @@ end
 
 if opts.WithinSubject
     for s=1:numel(data)
-        sigmas(s)=MLEout(s).parh(1);
-        omegas(s)=MLEout(s).parh(2);
+        parh(:,s)=MLEout(s).parh;
     end
 
-figure(1)
-clf
-subplot(2,1,1)
-bar(sigmas)
-ylabel('sigma')
-subplot(2,1,2)
-bar(omegas)
-ylabel('omega')
-sum(omegas>0)
-mean(omegas)
+
+
+Pars=size(parh,1);
+    
+    figure(1)
+    clf
+    for i=1:Pars
+        subplot(Pars,1,i)
+        bar(parh(i,:))
+        ylabel(MLEout(1).toEst{i})
+        xlabel('Subject')
+    end
+    
+    figure(2)
+    clf
+    for i=1:Pars
+        subplot(Pars,1,i)
+        hist(parh(i,:))
+        ylabel(MLEout(1).toEst{i})
+        xlabel('Subject')
+    end
 end
 %%
 if ~isempty(opts.Hier)

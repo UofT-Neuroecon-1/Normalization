@@ -96,7 +96,7 @@ elseif strcmp(modelIn,'Ebb2')
 end
  
 if Jmax==2
-    opts.toRestr=[opts.toRestr {'c1'}];
+    %opts.toRestr=[opts.toRestr {'c1'}];
 else
     %Define Covariance Matrix
     M=[ -1*ones(Jmax-1,1) eye(Jmax-1)];

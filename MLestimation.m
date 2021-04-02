@@ -28,7 +28,7 @@ function out=MLestimation(dataIn,par0,opts)
     for s=1:numel(dataIn)       
         if length(dataIn(s).y)~=T1
             opts.balanced=0;
-            disp('Dataset is unbalanced')
+            warning('Dataset is unbalanced')
         end
         
         if isrow(dataIn(s).J)
@@ -79,7 +79,7 @@ function out=MLestimation(dataIn,par0,opts)
         end
         
         if ~all(sort(data(s).X{1},'descend')==data(s).X{1})
-            warning('Choice alternatives not ordered')
+            warning('Choice alternatives not ordered.')
         end
         
         if ~strcmp(opts.Prob,'Linear')
@@ -89,7 +89,8 @@ function out=MLestimation(dataIn,par0,opts)
                 M{i}=[temp(:,1:i-1) -1*ones(Jm-1,1) temp(:,i:Jm-1)];
             end
             for t=1:T
-                data(s).Mi{t}=M{data(s).y(t)}(1:data(s).J(t)-1,1:data(s).J(t)); 
+                %data(s).Mi{t}=M{data(s).y(t)}(1:data(s).J(t)-1,1:data(s).J(t));
+                data(s).Mi(:,:,t)=M{data(s).y(t)}(1:data(s).J(t)-1,1:data(s).J(t));
             end  
         end
     end
@@ -108,9 +109,7 @@ UB=opts.UB;
 if length(par0)==sum(LB~=UB)
     theta0=par0;
 else
-    disp('Number of initial points does not match number of parameters specified. Using random starting points instead.');
-
-    theta0=randn(1, sum(LB~=UB));
+    error('Number of initial points does not match number of parameters specified.');
 end
 
 
@@ -183,47 +182,54 @@ end
 %         -LLfun(LB)
 %     end
         
-    if opts.numInit==1 %start estimation at theta0 using gradiant method
-        %[thetah, maxLL, exitflags]=feval(optfun,opts.objfun,theta0,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
-        %[thetah, maxLL, exitflags]=fminsearchbnd(opts.objfun,theta0,LB(LB~=UB),UB(LB~=UB),options);
-        %[thetah, maxLL, exitflags,~,~,grad,hess]=fmincon(opts.objfun,thetah,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
+%     if size(theta0,1)==1 %start estimation at theta0 using gradiant method
+%         %[thetah, maxLL, exitflags]=feval(optfun,opts.objfun,theta0,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
+%         %[thetah, maxLL, exitflags]=fminsearchbnd(opts.objfun,theta0,LB(LB~=UB),UB(LB~=UB),options);
+%         %[thetah, maxLL, exitflags,~,~,grad,hess]=fmincon(opts.objfun,thetah,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
+%         
+%         [thetah, nLL, exitflags,~,~,grad,hess]=fmincon(opts.objfun,theta0,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
+%         i=1;
+% 
+%         maxLL=-nLL;
+%         parh=thetah(i,:);
+% 
+%         fprintf('Value of the log-likelihood function at convergence: %9.4f \n',maxLL(i));
+%         exitflag=exitflags(i);
+%         disp(['Estimation took ' num2str(toc./60) ' minutes.']);
+%         disp('Estimates:');
+%         names=[opts.toEst opts.toRestr];
+%         disp(strcat(char([opts.toEst';opts.Hier';opts.toRestr']),': ',strjust(num2str(num2str([parh'; opts.thetaR'])),'right')))
+%     else
+%         
         
-        [thetah, nLL, exitflags,~,~,grad,hess]=fmincon(opts.objfun,theta0,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
-        i=1;
+        %theta0=randn(1, sum(LB~=UB));
+        
+%         [thetah, nLL, exitflags, ~]=rmsearch(opts.objfun,'fminsearchbnd',theta0,LB(LB~=UB),UB(LB~=UB),'options',options,'InitialSample',opts.numInit);
+%             [~,i]=max(-nLL);
+% 
+%         fprintf('Value of the log-likelihood function at convergence: %9.4f \n',-nLL(i));
+%         exitflag=exitflags(i);
+%         disp(['Estimation took ' num2str(toc./60) ' minutes.']);
+%         disp('Estimates:');
+%         disp()
+%         disp(thetah);
+%         save 'mpnormEst1stStage.mat' 'thetah' 'nLL' 'exitflags'
 
-        maxLL=-nLL;
+        for n=1:size(theta0,1)
+           [thetah(n,:), nLL(n), exitflags(n)]=fminsearchbnd(opts.objfun,theta0(n,:),LB(LB~=UB),UB(LB~=UB),options);  
+            
+           [thetah(n,:), nLL(n), exitflags(n),~,~,grad(n,:),hess]=fmincon(opts.objfun,thetah(n,:),[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
+        end
+        [maxLL,i]=max(-nLL);
         parh=thetah(i,:);
-
-        fprintf('Value of the log-likelihood function at convergence: %9.4f \n',maxLL(i));
+        
+        fprintf('Value of the log-likelihood function at convergence: %9.4f \n',maxLL);
         exitflag=exitflags(i);
         disp(['Estimation took ' num2str(toc./60) ' minutes.']);
         disp('Estimates:');
         names=[opts.toEst opts.toRestr];
         disp(strcat(char([opts.toEst';opts.Hier';opts.toRestr']),': ',strjust(num2str(num2str([parh'; opts.thetaR'])),'right')))
-    else
-        [thetah, nLL, exitflags, xstart]=rmsearch(opts.objfun,'fminsearchbnd',theta0,LB(LB~=UB),UB(LB~=UB),'options',options,'InitialSample',opts.numInit);
-            [maxLL,i]=max(-nLL);
 
-        fprintf('Value of the log-likelihood function at convergence: %9.4f \n',-nLL(i));
-        exitflag=exitflags(i);
-        disp(['Estimation took ' num2str(toc./60) ' minutes.']);
-        disp('Estimates:');
-        disp()
-        disp(thetah);
-        save 'mpnormEst1stStage.mat' 'thetah' 'nLL' 'exitflags'
-
-        for n=1:opts.numInit
-            [thetah(n,:), nLL(n), exitflags(n),~,~,grad(n,:),hess]=fmincon(opts.objfun,thetah(n,:),[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
-        end
-        [maxLL,i]=max(-nLL);
- 
-        fprintf('Value of the log-likelihood function at convergence: %9.4f \n',-nLL(i));
-        exitflag=exitflags(i);
-        disp(['Estimation took ' num2str(toc./60) ' minutes.']);
-        disp('Estimates:');
-        disp(thetah);
-        save 'mpnormEst2ndStage.mat' 'thetah' 'nLL' 'exitflags' 'grad'
-    end
                        
 
     %Get likelihood at estimates for Vuong test	
@@ -293,9 +299,9 @@ end
     
                 %draws(:,:,k)=gaminv(net(p,R),HierParams(1),HierParams(2)); %need to draw independently for each subject for consistency and asymptotic normality
                 if strcmp(opts.HierDist(k),'gamma')
-                    draws(:,:,k)=gamrnd(HierParams(1),HierParams(2),R,S);
+                    draws(:,k,:)=gamrnd(HierParams(1),HierParams(2),S,1,R);
                 elseif strcmp(opts.HierDist(k),'normal')
-                    draws(:,:,k)=normrnd(HierParams(1),HierParams(2),R,S);
+                    draws(:,k,:)=normrnd(HierParams(1),HierParams(2),S,1,R);
                 end
             
             end
@@ -303,37 +309,46 @@ end
             
             
             %draws=reshape(logninv(net(p,R*S),par(opts.Hier==1),theta(end-sum(opts.Hier)+1:end)),R,S);
+            %if opts.balanced
             
-            Pi=zeros(length(data(s).X),R,S);
+                tic
+                %Pi=zeros(length(data(s).X),R,S);
+                logPi=cell(S,1);
+                
+                parfor subj=1:S 
+    %                 for r=1:R
+    %                     particle=struct();
+    %                     par=theta(1:length(opts.toEst));                   
+    %                     par(strcmp(opts.Hier,opts.toEst))=squeeze(draws(r,subj,:));
+    %                     particle.theta=par;
+    %                     Pi(:,subj,r)=ProbaChoice(data(subj), particle, opts );            
+    %                 end
 
-            parfor subj=1:S 
-%                 for r=1:R
-%                     particle=struct();
-%                     par=theta(1:length(opts.toEst));                   
-%                     par(strcmp(opts.Hier,opts.toEst))=squeeze(draws(r,subj,:));
-%                     particle.theta=par;
-%                     Pi(:,subj,r)=ProbaChoice(data(subj), particle, opts );            
-%                 end
+                        particle=struct();
+                        
+                        par=repmat(theta(1:length(opts.toEst)),1,1,R);     %just initialize              
+                        par(:,strcmp(opts.Hier,opts.toEst),:)=draws(subj,:,:);
+                        particle.theta=par;
+                       
+                        logPi{subj}=ProbaChoice(data(subj), particle, opts );
+                        %Pi(:,:,subj)=ProbaChoice(data(subj), particle, opts );            
 
-                    particle=struct();
-                    par=repmat(theta(1:length(opts.toEst)),R,1);                   
-                    par(:,strcmp(opts.Hier,opts.toEst))=squeeze(draws(:,subj,:));
-                    particle.theta=par;
-                    Pi(:,:,subj)=ProbaChoice(data(subj), particle, opts );            
-               
-            end
-
-            %nLL=-sum(log(mean(prod(Pi),2))); Too many zeros, line below corrects numerical issues
-            if opts.balanced
-                nLL=-sum( log(mean(exp(T*log(3)+sum(log(Pi))),2)) - T*log(3) );
-            else
-                error('Dataset isnt balanced, cannot compute LL');
-            end
-            
+                end
+                toc
+                %nLL=-sum(log(mean(prod(Pi),2))); Too many zeros, line below corrects numerical issues
+                
+                nLLs=@(x) (log(mean(exp(T*log(3)+sum(x)),2)) - T*log(3));            
+                nLL=-sum( cellfun(nLLs,logPi) );
+                
+                %nLL=-sum( log(mean(exp(T*log(3)+sum(log(Pi))),2)) - T*log(3) );
+%             else
+%                 error('Dataset isnt balanced, cannot compute LL (yet)');
+%             end
+%             
         else
             particle.theta=theta;
-            Pi=ProbaChoice(data, particle, opts );
-            nLL=-sum(log(Pi));
+            logPi=ProbaChoice(data, particle, opts );
+            nLL=-sum(logPi);
         end
     end
             

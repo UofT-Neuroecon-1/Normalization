@@ -27,22 +27,24 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
 %        end
 % 
     
-    Pi=F(data.X,data.Z,data.W,particle.theta); %Get Probs
+    logPi=F(cell2mat(data.X),data.Z,data.W,particle.theta); %Get Probs
  
-    Pi(Pi==0)=realmin;  % make sure that the probability of a choice is not 0
-
+    if any(Pi==0)
+       warning('Your Ps are 0')
+       Pi(Pi==0)=realmin;  % make sure that the probability of a choice is not 0
+    end
 
     function Pi=DN(X,~,~,theta)
         
-        par=[theta repmat(opts.thetaR,size(theta,1),1)];
+        par=[theta repmat(opts.thetaR,1,1,size(theta,3))];
         names=[opts.toEst opts.toRestr];
         
-        s = par(:,strcmp(names, 'sigma'));
-        w = par(:,startsWith(names, 'omega')); % all weights
-        a = par(:,strcmp(names, 'alpha'));
-        wx= par(:,strcmp(names, 'wx')); %additional own weight
+        s = par(:,strcmp(names, 'sigma'),:);
+        w = par(:,startsWith(names, 'omega'),:); % all weights
+        a = par(:,strcmp(names, 'alpha'),:);
+        wx= par(:,strcmp(names, 'wx'),:); %additional own weight
         
-        f = @(x) (x(sum(opts.toNorm,2)>1).^(a'));
+        %f = @(x) (x(sum(opts.toNorm,2)>1).^(a'));
         
         %
         if any(strcmp(opts.toEst, 'beta'))
@@ -51,12 +53,14 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
                 b=0.0000000001; %hack so that s.e. calculation (hessian()) can send negative b. In estimation, beta is restricted to be >0 so doesn't matter.
             end
             weights=w*opts.toNorm;
-            ind=eye(3);
+            ind=eye(3); error('Need to adjust index to match number of alternatives and conform with opts.toNorm')
             if any(strcmp(opts.toEst, 'wx'))
                 weights(logical(ind(:)))=wx;
             end
             
-            denom=@(x) (s + vecnorm(weights.*x',b,2) ); %this line includes the weight in the norm, so (w*x)^b.
+            %denom=@(x) (s + vecnorm(weights.*x',b,2) ); %this line includes the weight in the norm, so (w*x)^b.
+            
+            V=@(x) ( (x(sum(opts.toNorm,2)>1,:).^(a')) ./ (s + vecnorm(weights.*x',b,2) ));
             %denom=@(x) (s + sum(weights.*(x.^b'),2).^(1/b) ); %messed up
             
             %Note that beloe wx is the "extra" weight relative w. So in
@@ -66,39 +70,46 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
             %denom=@(x) (s + sum((w + wx*eye(length(x))).*(x.^b'),2).^(1/b) ); %this line does not include the abs(weight) in the norm, so w*x^b.
         elseif any(strcmp(opts.toEst, 'wx'))  
             weights=w*opts.toNorm;
-            ind=eye(3);
+            ind=eye(3); error('Need to adjust index to match number of alternatives and conform with opts.toNorm')
             if any(strcmp(opts.toEst, 'wx'))
                 weights(logical(ind(:)))=wx;
             end
-            denom=@(x) (s + vecnorm(weights(sum(opts.toNorm,2)>1,:).*x',1,2) ); %this line is not wrong, it just doesn't allow beta free, but allows w<0.
+            V=@(x) ( x(sum(opts.toNorm,2)>1,:).^(a')) ./ (s + vecnorm(weights(sum(opts.toNorm,2)>1,:).*x',1,2) );
+            %denom=@(x) (s + vecnorm(weights(sum(opts.toNorm,2)>1,:).*x',1,2) ); %this line is not wrong, it just doesn't allow beta free, but allows w<0.
         else
             if size(w,2)==1
-                weights=w*opts.toNorm;
+                weights=reshape(w,1,1,length(w)).*opts.toNorm;
             else
                 weights=w; warning('Check dimension of vector multiplication');
             end
-            denom=@(x) (s + weights(sum(opts.toNorm,2)>1,:)*x); %if w is a scalar, then expand to vector and take vector product
+            V=@(x) ( (x(sum(opts.toNorm,2)>1,:).^(a)) ./ (reshape(s,1,1,length(s)) + squeeze(pagemtimes(weights(sum(opts.toNorm,2)>1,:,:),x))) );
+            %denom=@(x) (s' + squeeze(pagemtimes(weights(sum(opts.toNorm,2)>1,:,:),x))); %if w is a scalar, then expand to vector and take vector product
         end
         
-        
-        %denom=@(x) (sigma + omega*norm(x,b) );
-        %vecnorm(cell2mat(X)',2)
-        sumv=cellfun(denom,X,'uniformoutput',false);
-        numerator=cellfun(f,X,'uniformoutput',false);
-        v=cellfun(@rdivide,numerator,sumv,'uniformoutput',false);
+       
+%         sumv=cellfun(denom,X,'uniformoutput',false);
+%         numerator=cellfun(f,X,'uniformoutput',false);
+%         v=cellfun(@rdivide,numerator,sumv,'uniformoutput',false);
+
+        %v=cellfun(V,X,'uniformoutput',false);
+        v=V(X);
+
 
         switch opts.Prob
             case 'GHK'
                 if opts.setsize==1
                     Pi=calcPiGHKC(data.Mi,v,data.J,par(find(startsWith(names, 'c'))));
+                    logPi=log(Pi);
                 else
                     Pi=calcPiGHK(data.y,cell2mat(v)',par(find(startsWith(names, 'c'))),opts.GHKdraws);
+                    logPi=log(Pi);
                 end
             case 'Linear'
-                Pi=calcPiLinear(data.y,cell2mat(v)');
+                logPi=calcPiLinear(data.y,v');
             otherwise               
                 P=eval(['@calcPi' opts.Prob]); %Construct function handle for probability function based on label in opts.Prob
                 Pi = P(data.Mi,v,data.J,opts.scale); %y is Mi
+                logPi=log(Pi);
         end
         
     end
@@ -139,6 +150,7 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
         
         P=eval(['@calcPi' opts.Prob]);
         Pi = P(data.Mi,v,data.J); %y is Mi
+        logPi=log(Pi);
             
     end
 
@@ -182,6 +194,7 @@ function Pi=Ebb(X,prob,ebbc,theta)
         
         P=eval(['@calcPi' opts.Prob]);
         Pi = P(data.Mi,eu,data.J); %y is Mi
+        logPi=log(Pi);
     end
 end
 
@@ -192,9 +205,10 @@ function Pi=calcPiProbit(Mi,v,J,scale)
     T=size(v,2);
     
     
-    if length(v{1})==2 %Binary Choice
+    if size(v,1)==2 %Binary Choice
         if all(J==J(1)) % all choice sets same size, then all trials together (much faster)   
-            vi=cellfun(@mtimes, Mi, v)';
+            vi=pagemtimes(Mi, permute(v,[1,3,2]));
+            %vi=cellfun(@mtimes, Mi, v)';
             Pi=normcdf(-vi./scale);
         else
             error('Different size choice sets. This Probit code doesnt work for binary choice, use Logit')
@@ -217,9 +231,9 @@ function Pi=calcPiProbit(Mi,v,J,scale)
             Pi=sum(bsxfun(@times,w',squeeze(aa)),2)./sqrt(pi);
 
         elseif all(J==J(1)) % all trials together (much faster)   
-            viC = cellfun(@mtimes, Mi, v, 'UniformOutput', false); %cell version
-            vi = cell2mat(viC);
-
+%             viC = cellfun(@mtimes, Mi, v, 'UniformOutput', false); %cell version
+%             vi = cell2mat(viC);
+            vi=squeeze(pagemtimes(Mi, permute(v,[1,3,2])));
             %zz=bsxfun(@minus,-sqrt(2).*vi,repmat(-sqrt(2)*reshape(x,[1 1 100]), [J-1,T,1]));
             zz=(-sqrt(2).*vi) - reshape(-sqrt(2)*x,[1,1,100]);
             aa=prod(normcdf(zz));
@@ -240,10 +254,13 @@ function Pi=calcPiProbit(Mi,v,J,scale)
 end
 
 function Pi=calcPiLogit(Mi,v,~,scale)
-        vi=cellfun(@mtimes, Mi, v, 'UniformOutput', false);
+        %vi=cellfun(@mtimes, Mi, v, 'UniformOutput', false);
         %cellfun(@exp,vi','UniformOutput', false)
-        sum_exp_v = cellfun(@(x) sum(exp(x./scale),1),vi,'UniformOutput', false);
-        Pi = 1./(1+cell2mat(sum_exp_v'));
+        
+        vi=pagemtimes(Mi, permute(v,[1,3,2]));
+        sum_exp_v = sum(exp(vi./scale),1);
+        %sum_exp_v = cellfun(@(x) sum(exp(x./scale),1),vi,'UniformOutput', false);
+        Pi = 1./(1+squeeze(sum_exp_v)');
 end
             
 
@@ -341,6 +358,6 @@ end
 
 function Pi=calcPiLinear(y,v)
        
-        logPi =  -.5*log(2*pi) - log(sigma) - .5*sigma^(-2) *(y-v(:,1))^2;
-        Pi=exp(log(Pi));
+        logPi =  -.5*log(2*pi) - log(sigma) - .5*sigma^(-2) *(y-v(:,1))^2; %contribution of eah observation
+        Pi=exp(logPi);
 end
