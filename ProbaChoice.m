@@ -1,4 +1,4 @@
-function [ Pi ] = ProbaChoice( data, particle,opts )
+function [ logPi ] = ProbaChoice( data, particle,opts )
     % data.X: J x K matrix of choice set
     % data.y: Tx1 of choices
     % model: the model to use
@@ -28,13 +28,31 @@ function [ Pi ] = ProbaChoice( data, particle,opts )
 % 
     
     logPi=F(cell2mat(data.X),data.Z,data.W,particle.theta); %Get Probs
- 
-    if any(Pi==0)
-       warning('Your Ps are 0')
-       Pi(Pi==0)=realmin;  % make sure that the probability of a choice is not 0
+
+    function v=DN(X,~,~,theta)
+        
     end
 
-    function Pi=DN(X,~,~,theta)
+        switch opts.Prob
+            case 'GHK'
+                if opts.setsize==1
+                    Pi=calcPiGHKC(data.Mi,v,data.J,par(find(startsWith(names, 'c'))));
+                    logPi=log(Pi);
+                else
+                    Pi=calcPiGHK(data.y,cell2mat(v)',par(find(startsWith(names, 'c'))),opts.GHKdraws);
+                    logPi=log(Pi);
+                end
+            case 'Linear'
+                logPi=calcPiLinear(data.y,v');
+            otherwise               
+                P=eval(['@calcPi' opts.Prob]); %Construct function handle for probability function based on label in opts.Prob
+                Pi = P(data.Mi,v,data.J,opts.scale); %y is Mi
+                logPi=log(Pi);
+        end
+        
+        
+    
+    function logPi=DN(X,~,~,theta)
         
         par=[theta repmat(opts.thetaR,1,1,size(theta,3))];
         names=[opts.toEst opts.toRestr];

@@ -31,17 +31,16 @@ backup_file = '';
 %data(n).Z : Attribute
 %data(n).K : Number of Attributes per Alternative
 
-%d='test/'
 %load data/ExampleDataSS
-%load data/ExampleData3
+load data/ExampleData3
 %load data/ExpDataSS
 %load data/ExpData3
 
 %load ~/Dropbox/Projects/IIA-NHB/kenway/kenwaydataout.mat
-
-d='~/Dropbox/Projects/Adaptation/DiscreteChoiceExp/';
-%d='~/Dropbox/Projects/Adaptation/Continuous/';
-load([d,'dataOut.mat']) %all choices
+% 
+% d='~/Dropbox/Projects/Adaptation/DiscreteChoiceExp/';
+% %d='~/Dropbox/Projects/Adaptation/Continuous/';
+% load([d,'dataOut.mat']) %all choices
 
 %load([d,'dataOutContext.mat']) %only the context choices
 %load([d,'dataOutBinary.mat']) %only the binary choices
@@ -76,14 +75,14 @@ end
 
 opts.Models = {'Logit'};
 
-opts.toNorm=[1 0 1 1 0 0;
-    0 1 0 0 1 1
-    0 0 0 0 0 0
-    0 0 0 0 0 0
-    0 0 0 0 0 0
-    0 0 0 0 0 0]; %matrix which defines which alts are in the choice set (rows) and which alts to normalize them by (columns)
+% opts.toNorm=[1 0 1 1 0 0;
+%     0 1 0 0 1 1
+%     0 0 0 0 0 0
+%     0 0 0 0 0 0
+%     0 0 0 0 0 0
+%     0 0 0 0 0 0]; %matrix which defines which alts are in the choice set (rows) and which alts to normalize them by (columns)
 
-%  opts.toNorm=ones(3);   
+ opts.toNorm=ones(3);   
 
 %What is the form of the likelihood?
 %'Linear': continuous dependent variable. Assumes that the 'target' is the

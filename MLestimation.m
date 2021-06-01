@@ -275,7 +275,7 @@ end
     out.toEst=opts.toEst;
         
     %%%%%% Nested Functions %%%%%%%   
-    function [nLL, Pi]=LLfun(theta)
+    function [nLL, logPi]=LLfun(theta)
         
         if ~isempty(opts.Hier)
                       
