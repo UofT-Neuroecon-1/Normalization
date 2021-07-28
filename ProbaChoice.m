@@ -9,130 +9,37 @@ function [ logPi ] = ProbaChoice( data, particle,opts )
     J = data.J;
     K = data.K;
     
-    F=eval(['@' opts.modelF]);
-        
-%       if opts.indep %%%%Gaussian Quadrature       
-%             %If # of alts not constant over sample, calc Pi's individually
-%             if opts.SS==1 %set size changes on each trial, so run for loop over trials (might be able to speed up like below...)
-%                 Pi=calcPiSS(Mi,Z);
-%             else %set size is constant
-%                 Pi=calcPiInd(Mi,Z,J);
-%             end                  
-%        else %Use GHK simulation
-%             if opts.SS==1
-%                 Pi=calcPiGHKC(Mi,Z,J,c,E);
-%             else
-%                 Pi=calcPiGHK(y,cell2mat(Z)',c,E);
-%             end
-%        end
-% 
+
     
-    logPi=F(cell2mat(data.X),data.Z,data.W,particle.theta); %Get Probs
-
-    function v=DN(X,~,~,theta)
-        
-    end
-
-        switch opts.Prob
-            case 'GHK'
-                if opts.setsize==1
-                    Pi=calcPiGHKC(data.Mi,v,data.J,par(find(startsWith(names, 'c'))));
-                    logPi=log(Pi);
-                else
-                    Pi=calcPiGHK(data.y,cell2mat(v)',par(find(startsWith(names, 'c'))),opts.GHKdraws);
-                    logPi=log(Pi);
-                end
-            case 'Linear'
-                logPi=calcPiLinear(data.y,v');
-            otherwise               
-                P=eval(['@calcPi' opts.Prob]); %Construct function handle for probability function based on label in opts.Prob
-                Pi = P(data.Mi,v,data.J,opts.scale); %y is Mi
+    par=[particle.theta repmat(opts.thetaR,1,1,size(particle.theta,3))];
+    names=[opts.toEst opts.toRestr];
+    
+    %Which model to use?
+    NormalizationFunction=eval(['@' opts.modelF]);
+    
+    %Get Valuations
+    v=NormalizationFunction(data,par,names,opts);
+   
+    %Calculate Choice Probabilities
+    switch opts.Prob
+        case 'GHK'
+            if opts.setsize==1
+                Pi=calcPiGHKC(data.Mi,v,data.J,par(find(startsWith(names, 'c'))));
                 logPi=log(Pi);
-        end
-        
-        
-    
-    function logPi=DN(X,~,~,theta)
-        
-        par=[theta repmat(opts.thetaR,1,1,size(theta,3))];
-        names=[opts.toEst opts.toRestr];
-        
-        s = par(:,strcmp(names, 'sigma'),:);
-        w = par(:,startsWith(names, 'omega'),:); % all weights
-        a = par(:,strcmp(names, 'alpha'),:);
-        wx= par(:,strcmp(names, 'wx'),:); %additional own weight
-        
-        %f = @(x) (x(sum(opts.toNorm,2)>1).^(a'));
-        
-        %
-        if any(strcmp(opts.toEst, 'beta'))
-            b = par(strcmp(names, 'beta'));
-            if b<0
-                b=0.0000000001; %hack so that s.e. calculation (hessian()) can send negative b. In estimation, beta is restricted to be >0 so doesn't matter.
-            end
-            weights=w*opts.toNorm;
-            ind=eye(3); error('Need to adjust index to match number of alternatives and conform with opts.toNorm')
-            if any(strcmp(opts.toEst, 'wx'))
-                weights(logical(ind(:)))=wx;
-            end
-            
-            %denom=@(x) (s + vecnorm(weights.*x',b,2) ); %this line includes the weight in the norm, so (w*x)^b.
-            
-            V=@(x) ( (x(sum(opts.toNorm,2)>1,:).^(a')) ./ (s + vecnorm(weights.*x',b,2) ));
-            %denom=@(x) (s + sum(weights.*(x.^b'),2).^(1/b) ); %messed up
-            
-            %Note that beloe wx is the "extra" weight relative w. So in
-            %reporting results, add them together for w_i. Can be messed up when w<0 and taking norm (i.e. abs())
-            %denom=@(x) (s + vecnorm((w + wx*eye(length(x))).*x',b,2) ); %this line includes the weight in the norm, so (w*x)^b.
-            %denom=@(x) (s + sum(((w + wx*eye(length(x))).*x).^b',2).^(1/b) ); %this line does not include the abs(weight) in the norm, so w*x^b.
-            %denom=@(x) (s + sum((w + wx*eye(length(x))).*(x.^b'),2).^(1/b) ); %this line does not include the abs(weight) in the norm, so w*x^b.
-        elseif any(strcmp(opts.toEst, 'wx'))  
-            weights=w*opts.toNorm;
-            ind=eye(3); error('Need to adjust index to match number of alternatives and conform with opts.toNorm')
-            if any(strcmp(opts.toEst, 'wx'))
-                weights(logical(ind(:)))=wx;
-            end
-            V=@(x) ( x(sum(opts.toNorm,2)>1,:).^(a')) ./ (s + vecnorm(weights(sum(opts.toNorm,2)>1,:).*x',1,2) );
-            %denom=@(x) (s + vecnorm(weights(sum(opts.toNorm,2)>1,:).*x',1,2) ); %this line is not wrong, it just doesn't allow beta free, but allows w<0.
-        else
-            if size(w,2)==1
-                weights=reshape(w,1,1,length(w)).*opts.toNorm;
             else
-                weights=w; warning('Check dimension of vector multiplication');
-            end
-            V=@(x) ( (x(sum(opts.toNorm,2)>1,:).^(a)) ./ (reshape(s,1,1,length(s)) + squeeze(pagemtimes(weights(sum(opts.toNorm,2)>1,:,:),x))) );
-            %denom=@(x) (s' + squeeze(pagemtimes(weights(sum(opts.toNorm,2)>1,:,:),x))); %if w is a scalar, then expand to vector and take vector product
-        end
-        
-       
-%         sumv=cellfun(denom,X,'uniformoutput',false);
-%         numerator=cellfun(f,X,'uniformoutput',false);
-%         v=cellfun(@rdivide,numerator,sumv,'uniformoutput',false);
-
-        %v=cellfun(V,X,'uniformoutput',false);
-        v=V(X);
-
-
-        switch opts.Prob
-            case 'GHK'
-                if opts.setsize==1
-                    Pi=calcPiGHKC(data.Mi,v,data.J,par(find(startsWith(names, 'c'))));
-                    logPi=log(Pi);
-                else
-                    Pi=calcPiGHK(data.y,cell2mat(v)',par(find(startsWith(names, 'c'))),opts.GHKdraws);
-                    logPi=log(Pi);
-                end
-            case 'Linear'
-                logPi=calcPiLinear(data.y,v');
-            otherwise               
-                P=eval(['@calcPi' opts.Prob]); %Construct function handle for probability function based on label in opts.Prob
-                Pi = P(data.Mi,v,data.J,opts.scale); %y is Mi
+                Pi=calcPiGHK(data.y,cell2mat(v)',par(find(startsWith(names, 'c'))),opts.GHKdraws);
                 logPi=log(Pi);
-        end
-        
+            end
+        case 'Linear'
+            logPi=calcPiLinear(data.y,v');
+        otherwise               
+            P=eval(['@calcPi' opts.Prob]); %Construct function handle for probability function based on label in opts.Prob
+            Pi = P(data.Mi,v,data.J,opts.scale); %y is Mi
+            logPi=log(Pi);
     end
+        
 
-    function Pi=Range(X,~,~,theta)
+    function Pi=Range(data,theta)
  
         par=[theta opts.thetaR];
         names=[opts.toEst opts.toRestr];
@@ -162,13 +69,13 @@ function [ logPi ] = ProbaChoice( data, particle,opts )
         
         %denom=@(x) (sigma + omega*norm(x,b) );
         %vecnorm(cell2mat(X)',2)
-        sumv=cellfun(denom,X,'uniformoutput',false);
-        numerator=cellfun(f,X,'uniformoutput',false);
+        sumv=cellfun(denom,data.X,'uniformoutput',false);
+        numerator=cellfun(f,data.X,'uniformoutput',false);
         v=cellfun(@rdivide,numerator,sumv,'uniformoutput',false);
         
-        P=eval(['@calcPi' opts.Prob]);
-        Pi = P(data.Mi,v,data.J); %y is Mi
-        logPi=log(Pi);
+%         P=eval(['@calcPi' opts.Prob]);
+%         Pi = P(data.Mi,v,data.J); %y is Mi
+%         logPi=log(Pi);
             
     end
 
@@ -185,7 +92,7 @@ function Pi=Ebb(X,prob,ebbc,theta)
         a = par(find(strcmp(names, 'alpha')));
         b = par(find(strcmp(names, 'beta')));
         wx= par(find(strcmp(names, 'wx'))); %additional own weight
-        wx= par(find(strcmp(names, 'webb'))); %additional own weight
+        webb= par(find(strcmp(names, 'webb'))); %additional own weight
         
        
         if b<0
@@ -210,9 +117,9 @@ function Pi=Ebb(X,prob,ebbc,theta)
         v=cellfun(@rdivide,numerator,sumv,'uniformoutput',false);
         eu=cellfun(@times,prob,v,'uniformoutput',false);
         
-        P=eval(['@calcPi' opts.Prob]);
-        Pi = P(data.Mi,eu,data.J); %y is Mi
-        logPi=log(Pi);
+%         P=eval(['@calcPi' opts.Prob]);
+%         Pi = P(data.Mi,eu,data.J); %y is Mi
+%         logPi=log(Pi);
     end
 end
 

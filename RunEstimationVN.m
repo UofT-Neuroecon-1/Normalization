@@ -39,10 +39,12 @@ backup_file = '';
 
 %load ~/Dropbox/Projects/IIA-NHB/kenway/kenwaydataout.mat
 
-d='~/Dropbox/Projects/Adaptation/DiscreteChoiceExp/';
-%d='~/Dropbox/Projects/Adaptation/Continuous/';
-load([d,'dataOut.mat']) %all choices
+%d='~/Dropbox/Projects/Adaptation/DiscreteChoiceExp/';
+%load([d,'dataOut.mat']) %all choices
 
+
+d='~/Dropbox/Projects/Adaptation/Continuous/';
+load([d,'dataOut.mat']) %all choices
 %load([d,'dataOutContext.mat']) %only the context choices
 %load([d,'dataOutBinary.mat']) %only the binary choices
 
@@ -74,16 +76,16 @@ end
 %{'Logit'}
 %'DNw3'
 
-opts.Models = {'Logit'};
+opts.Models = {'Linear'};
 
-opts.toNorm=[1 0 1 1 0 0;
-    0 1 0 0 1 1
-    0 0 0 0 0 0
-    0 0 0 0 0 0
-    0 0 0 0 0 0
-    0 0 0 0 0 0]; %matrix which defines which alts are in the choice set (rows) and which alts to normalize them by (columns)
+% opts.toNorm=[1 0 1 1 0 0;
+%     0 1 0 0 1 1
+%     0 0 0 0 0 0
+%     0 0 0 0 0 0
+%     0 0 0 0 0 0
+%     0 0 0 0 0 0]; %matrix which defines which alts are in the choice set (rows) and which alts to normalize them by (columns)
 
-%  opts.toNorm=ones(3);   
+  opts.toNorm=ones(3);   
 
 %What is the form of the likelihood?
 %'Linear': continuous dependent variable. Assumes that the 'target' is the
@@ -91,10 +93,10 @@ opts.toNorm=[1 0 1 1 0 0;
 %'Logit': discrete dependent variable, logistic CDF
 %'Probit': discrete dependent variable, standard normal CDF
 %'GHK': discrete dependent variable, multivariate normal CDF
-opts.Prob='Logit'; %'Probit','Logit','GHK', 'HP', 'Linear' 
+opts.Prob='Linear'; %'Probit','Logit','GHK', 'HP', 'Linear' 
 
 %Pool data across subjects, or estimate within:
-opts.WithinSubject=1;
+opts.WithinSubject=0;
 
 %And if pooling, allow hierarchical model?
 opts.Hier={}; %which parameters to make hierarchical: kappa, sigma, omega, alpha, beta;
@@ -109,8 +111,8 @@ opts.cluster=length(data); % each subject in own cluster
 
 opts.numInit = 1; %1: run using gradient- method first at theta0. If >1, use random starting points with gradient free method.
 %theta0=[39.6721      -86.581      22.0963      31.3169];
-%theta0 = [13 .1; 13 -.1];
-theta0 = [13];
+%theta0 = [13 .1 1; 13 -.1 1];
+theta0 = [13 1];
     
 %%%%Estimation Specific Parameters
 %for particle filter (ignore if using ML)
@@ -148,20 +150,40 @@ if ~exist('Analysis','dir')
     mkdir('Analysis')
 end
 
-%% Max Likelihood 
-% Maximum Likelihood (Within)
-if opts.WithinSubject
-    for s = 1:numel(data)
-        disp(['Estimate subject: ',num2str(s)])
-        MLEout(s) = MLestimation(data(s),theta0,opts);
+%% Estimate 
 
-        save([d,'MLEout',opts.Models{:},opts.Prob,'WithinSubject','.mat'])
+
+if strcmp(opts.Prob,'Linear')
+    if opts.WithinSubject
+        for s = 1:numel(data)
+            disp(['Estimate subject: ',num2str(s)])
+            NLSout(s) = LSestimation(data(s),theta0,opts);
+
+            save([d,'NLSout',opts.Models{:},opts.Prob,'WithinSubject','.mat'])
+        end
+    else
+        %Maximum Likelihood (Pooled or Hierarchical)
+        NLSout = LSestimation(data,theta0,opts);
+
+        save([d,'NLSout',opts.Models{:},opts.Prob,'.mat'])
     end
+    
 else
-    %Maximum Likelihood (Pooled or Hierarchical)
-    MLEout = MLestimation(data,theta0,opts);
 
-    save([d,'MLEout',opts.Models{:},opts.Prob,'.mat'])
+    % Maximum Likelihood (Within)
+    if opts.WithinSubject
+        for s = 1:numel(data)
+            disp(['Estimate subject: ',num2str(s)])
+            MLEout(s) = MLestimation(data(s),theta0,opts);
+
+            save([d,'MLEout',opts.Models{:},opts.Prob,'WithinSubject','.mat'])
+        end
+    else
+        %Maximum Likelihood (Pooled or Hierarchical)
+        MLEout = MLestimation(data,theta0,opts);
+
+        save([d,'MLEout',opts.Models{:},opts.Prob,'.mat'])
+    end
 end
 
 %% Model Output

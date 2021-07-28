@@ -1,4 +1,4 @@
-function out=MLestimation(dataIn,par0,opts)
+function out=LSestimation(dataIn,par0,opts)
     %this function sets up the ML estimation:
     %-checks data conditions
     %-sets up the dataset (pooled or hierarchical)
@@ -73,6 +73,7 @@ function out=MLestimation(dataIn,par0,opts)
         data.W=cell2mat(data.W);
     end
 
+
     
     %% Choice set Properties
     opts.setsize=0; %Initially assume that choice set size doesn't change size
@@ -100,8 +101,8 @@ function out=MLestimation(dataIn,par0,opts)
         end
     end
      
-   alg='fmincon';
-   opts.objfun=@LLfun; 
+   alg='lsqnonlin';
+   opts.objfun=@ErrorFun; 
 
 %% Set Restrictions 
 opts=setRestrictions(model,Jm,opts);
@@ -139,8 +140,8 @@ end
     opts.WithinSubject
     tic;
     
-    if strcmp(alg,'optimize') 
-        disp('Using Simplex Method');
+    if strcmp(alg,'lsqnonlin') 
+        disp('Using Non-Linear Least Squares');
 
         %Use optimize toolbox
         %options.Display='plot';
@@ -150,85 +151,19 @@ end
 
         time=('00:10:00');
         getHess=0;
-    elseif strcmp(alg,'fminsearch')
-         disp('Using Simplex Method');
-         options=optimset(options,'Display',opts.Display);
-
-          
-    elseif strcmp(alg,'fminsearchbnd')
-         disp('Using Bounded Simplex Method');
-         options=optimset(options,'Display',opts.Display);
-         
-         optfun=@fminsearchbnd;
-
-        
-    elseif strcmp(alg,'fminsearchcon')
-         disp('Using (Constrained) Simplex Method');
-         options=optimset(options,'Display',opts.Display,'OutputFcn',@outfun);
-
-    elseif strcmp(alg,'fminunc')
-         disp('Using Unconstrained Quasi-Newton');
-         options=optimset(options,'Largescale','off','Display',opts.Display);
-
-         getHess=1;
-
-    elseif strcmp(alg,'fmincon')
-         disp('Using Constrained Quasi-Newton');
-         options=optimset(options,'Algorithm','interior-point','Display',opts.Display,'OutputFcn',@outfun);
-        optfun=@fmincon;
-
-         getHess=1;
-
     end
 
     disp(sprintf('TolX: %g   TolFun: %g',options.TolX,options.TolFun));
-
-%     if isempty(theta0)
-%         -LLfun(LB)
-%     end
-        
-%     if size(theta0,1)==1 %start estimation at theta0 using gradiant method
-%         %[thetah, maxLL, exitflags]=feval(optfun,opts.objfun,theta0,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
-%         %[thetah, maxLL, exitflags]=fminsearchbnd(opts.objfun,theta0,LB(LB~=UB),UB(LB~=UB),options);
-%         %[thetah, maxLL, exitflags,~,~,grad,hess]=fmincon(opts.objfun,thetah,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
-%         
-%         [thetah, nLL, exitflags,~,~,grad,hess]=fmincon(opts.objfun,theta0,[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
-%         i=1;
-% 
-%         maxLL=-nLL;
-%         parh=thetah(i,:);
-% 
-%         fprintf('Value of the log-likelihood function at convergence: %9.4f \n',maxLL(i));
-%         exitflag=exitflags(i);
-%         disp(['Estimation took ' num2str(toc./60) ' minutes.']);
-%         disp('Estimates:');
-%         names=[opts.toEst opts.toRestr];
-%         disp(strcat(char([opts.toEst';opts.Hier';opts.toRestr']),': ',strjust(num2str(num2str([parh'; opts.thetaR'])),'right')))
-%     else
-%         
-        
-        %theta0=randn(1, sum(LB~=UB));
-        
-%         [thetah, nLL, exitflags, ~]=rmsearch(opts.objfun,'fminsearchbnd',theta0,LB(LB~=UB),UB(LB~=UB),'options',options,'InitialSample',opts.numInit);
-%             [~,i]=max(-nLL);
-% 
-%         fprintf('Value of the log-likelihood function at convergence: %9.4f \n',-nLL(i));
-%         exitflag=exitflags(i);
-%         disp(['Estimation took ' num2str(toc./60) ' minutes.']);
-%         disp('Estimates:');
-%         disp()
-%         disp(thetah);
-%         save 'mpnormEst1stStage.mat' 'thetah' 'nLL' 'exitflags'
-
+    
         for n=1:size(theta0,1)
-           [thetah(n,:), nLL(n), exitflags(n)]=fminsearchbnd(opts.objfun,theta0(n,:),LB(LB~=UB),UB(LB~=UB),options);  
+           [thetah(n,:), SSE(n),Rs(:,n), exitflags(n)]=lsqnonlin(opts.objfun,theta0(n,:),LB(LB~=UB),UB(LB~=UB),options);  
             
-           [thetah(n,:), nLL(n), exitflags(n),~,~,grad(n,:),hess]=fmincon(opts.objfun,thetah(n,:),[],[],[],[],LB(LB~=UB),UB(LB~=UB),[],options);
         end
-        [maxLL,i]=max(-nLL);
+        [minSSE,i]=min(SSE);
+        residuals=Rs(:,i);
         parh=thetah(i,:);
         
-        fprintf('Value of the log-likelihood function at convergence: %9.4f \n',maxLL);
+        fprintf('Value of the error function at convergence: %9.4f \n',minSSE);
         exitflag=exitflags(i);
         disp(['Estimation took ' num2str(toc./60) ' minutes.']);
         disp('Estimates:');
@@ -238,17 +173,14 @@ end
                        
 
     %Get likelihood at estimates for Vuong test	
-    [~,P]=opts.objfun(thetah(i,:));
-    
-    %Get gradient for convergence check 
-    %Or just report gradient from optimizer
-    %grad=gradest(@(x) -LLfun(x),thetah(i,:));    
-    
-    checkConvergence;
-    
-    save 'mpestimates.mat' 'data' 'grad' 'Jm'
-
-    disp('Estimates saved to disk');
+    if ~strcmp(opts.Prob,'Linear')
+        [~,P]=opts.objfun(thetah(i,:));
+        
+        checkConvergence;
+        
+        save 'mpestimates.mat' 'data' 'grad' 'Jm'
+        
+        disp('Estimates saved to disk');
     
     if opts.ses==1
         disp('Calculating finite-difference hessian and taking inverse for standard errors...');
@@ -264,7 +196,7 @@ end
     disp('Standard Errors:');
     disp(strcat([char(opts.toEst');char(opts.Hier')],': ',strjust(num2str(num2str(ses')),'left')))
     save 'mpestimates.mat' 'data' 'H' 'grad' 'Jm' 'ses'
-   
+    
     out.exitflag=exitflag;
     out.theta0=theta0;
     out.max=i;
@@ -279,82 +211,45 @@ end
     out.Prob=opts.Prob;
     out.toEst=opts.toEst;
         
-    %%%%%% Nested Functions %%%%%%%   
-    function [nLL, logPi]=LLfun(theta)
+    else 
         
-        if ~isempty(opts.Hier)
-                      
-            %par=opts.LB(1:6);
-            
-            %toEstimate=opts.LB(1:6)~=opts.UB(1:6);
-            
-            %par(toEstimate)=theta(1:end-sum(opts.Hier));
-            %par=theta(1:opts.toEst);
-            
-            
-            rng(1,'twister') % set random number seed
-            R=opts.R; %200
-            S=opts.cluster;
+        ci = nlparci(parh,resisuals,'covar',sigma)
 
-            for k=1:length(opts.Hier)
-                par=opts.Hier(k);
-                
-                %p = haltonset(S,'Skip',1e3,'Leap',1e2);  %Halton Sequence
-                HierParams=theta(strcmp(opts.Hier(k),[opts.toEst,opts.Hier]));
+        ses=zeros(1,length(LB));
+
+        disp('Standard Errors:');
+        disp(strcat([char(opts.toEst');char(opts.Hier')],': ',strjust(num2str(num2str(ses')),'left')))
+        save 'mpestimates.mat' 'data' 'Jm' 'ses'
+        
+        out.exitflag=exitflag;
+        out.theta0=theta0;
+        out.max=i;
+        out.parh=parh;
+        out.SSE=minSSE;
+        out.se=ses;
+
+        out.LB=LB;
+        out.UB=UB;
+        out.model=model;
+        out.Prob=opts.Prob;
+        out.toEst=opts.toEst;
+    end
     
-                %draws(:,:,k)=gaminv(net(p,R),HierParams(1),HierParams(2)); %need to draw independently for each subject for consistency and asymptotic normality
-                if strcmp(opts.HierDist(k),'gamma')
-                    draws(:,k,:)=gamrnd(HierParams(1),HierParams(2),S,1,R);
-                elseif strcmp(opts.HierDist(k),'normal')
-                    draws(:,k,:)=normrnd(HierParams(1),HierParams(2),S,1,R);
-                end
-            
-            end
+    %Get gradient for convergence check 
+    %Or just report gradient from optimizer
+    %grad=gradest(@(x) -LLfun(x),thetah(i,:));    
+    
+    
+    
+        
+    %%%%%% Nested Functions %%%%%%%   
+    function [errors]=ErrorFun(theta)
+    
+        par=[theta repmat(opts.thetaR,1,1,size(theta,3))];
+        names=[opts.toEst opts.toRestr];
 
-            
-            
-            %draws=reshape(logninv(net(p,R*S),par(opts.Hier==1),theta(end-sum(opts.Hier)+1:end)),R,S);
-            %if opts.balanced
-            
-                tic
-                %Pi=zeros(length(data(s).X),R,S);
-                logPi=cell(S,1);
-                
-                parfor subj=1:S 
-    %                 for r=1:R
-    %                     particle=struct();
-    %                     par=theta(1:length(opts.toEst));                   
-    %                     par(strcmp(opts.Hier,opts.toEst))=squeeze(draws(r,subj,:));
-    %                     particle.theta=par;
-    %                     Pi(:,subj,r)=ProbaChoice(data(subj), particle, opts );            
-    %                 end
-
-                        particle=struct();
-                        
-                        par=repmat(theta(1:length(opts.toEst)),1,1,R);     %just initialize              
-                        par(:,strcmp(opts.Hier,opts.toEst),:)=draws(subj,:,:);
-                        particle.theta=par;
-                       
-                        logPi{subj}=ProbaChoice(data(subj), particle, opts );
-                        %Pi(:,:,subj)=ProbaChoice(data(subj), particle, opts );            
-
-                end
-                toc
-                %nLL=-sum(log(mean(prod(Pi),2))); Too many zeros, line below corrects numerical issues
-                
-                nLLs=@(x) (log(mean(exp(T*log(3)+sum(x)),2)) - T*log(3));            
-                nLL=-sum( cellfun(nLLs,logPi) );
-                
-                %nLL=-sum( log(mean(exp(T*log(3)+sum(log(Pi))),2)) - T*log(3) );
-%             else
-%                 error('Dataset isnt balanced, cannot compute LL (yet)');
-%             end
-%             
-        else
-            particle.theta=theta;
-            logPi=ProbaChoice(data, particle, opts );
-            nLL=-sum(logPi);
-        end
+        v=DN(data, par, names, opts);
+        errors=data.y - v(1,:)';
     end
             
     function checkConvergence
