@@ -23,6 +23,13 @@ elseif strcmp(modelIn,'Logit')
     opts.toRestr={'omega','alpha','beta','wx'};
     thetaR=[0 1 1 0];
     opts.modelF='DN'; %use this for estimation
+elseif strcmp(modelIn,'Linear')
+    opts.toEst={'sigma'};
+    LB=0;
+    UB=Inf;
+    opts.toRestr={'omega','alpha','beta','wx'};
+    thetaR=[0 1 1 0];
+    opts.modelF='DN'; %use this for estimation
 elseif strcmp(modelIn,'DN')
     opts.toEst={'sigma','omega'};
     LB=[0 -Inf];
@@ -94,9 +101,18 @@ elseif strcmp(modelIn,'Ebb2')
     thetaR=[1 1];
     opts.modelF='Ebb'; %use this for estimation
 end
- 
-if Jmax==2
-    opts.toRestr=[opts.toRestr {'c1'}];
+
+if strcmp(opts.Prob,'Linear')
+    opts.toEst=[opts.toEst {'v0'}];
+    LB=[LB -inf];
+    UB=[UB inf];
+else
+    opts.toRestr=[opts.toRestr {'v0'}];
+    thetaR=[thetaR 0];
+end
+
+if Jmax==2 %binary choice
+    %opts.toRestr=[opts.toRestr {'c1'}];
 else
     %Define Covariance Matrix
     M=[ -1*ones(Jmax-1,1) eye(Jmax-1)];
