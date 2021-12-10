@@ -27,7 +27,7 @@ function [ logPi ] = ProbaChoice( data, particle,opts )
                 Pi=calcPiGHKC(data.Mi,v,data.J,par(find(startsWith(names, 'c'))));
                 logPi=log(Pi);
             else
-                Pi=calcPiGHK(data.y,cell2mat(v)',par(find(startsWith(names, 'c'))),opts.GHKdraws);
+                Pi=calcPiGHK(data.y,v',par(find(startsWith(names, 'c'))),opts.GHKdraws);
                 logPi=log(Pi);
             end
         case 'Linear'

@@ -114,7 +114,8 @@ UB=opts.UB;
 if length(par0)==sum(LB~=UB)
     theta0=par0;
 else
-    error('Number of initial points does not match number of parameters specified.');
+    theta0=LB;
+    theta0(LB~=UB)=ones(LB~=UB); disp('Number of initial points does not match number of parameters specified. Generating new starting points');
 end
 
 

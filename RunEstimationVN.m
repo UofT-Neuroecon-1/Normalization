@@ -31,11 +31,11 @@ backup_file = '';
 %data(n).Z : Attribute
 %data(n).K : Number of Attributes per Alternative
 
-%d='test/'
+d='test/'
 %load data/ExampleDataSS
 %load data/ExampleData3
 %load data/ExpDataSS
-%load data/ExpData3
+load data/ExpData3
 
 %load ~/Dropbox/Projects/IIA-NHB/kenway/kenwaydataout.mat
 
@@ -43,8 +43,8 @@ backup_file = '';
 %load([d,'dataOut.mat']) %all choices
 
 
-d='~/Dropbox/Projects/Adaptation/Continuous/';
-load([d,'dataOut.mat']) %all choices
+% d='~/Dropbox/Projects/Adaptation/Continuous/';
+% load([d,'dataOut.mat']) %all choices
 %load([d,'dataOutContext.mat']) %only the context choices
 %load([d,'dataOutBinary.mat']) %only the binary choices
 
@@ -74,9 +74,10 @@ end
 %{'Range'}
 %{'Ebb'}
 %{'Logit'}
+%{'Linear'}
 %'DNw3'
 
-opts.Models = {'Linear'};
+opts.Models = {'DNw'};
 
 % opts.toNorm=[1 0 1 1 0 0;
 %     0 1 0 0 1 1
@@ -93,7 +94,7 @@ opts.Models = {'Linear'};
 %'Logit': discrete dependent variable, logistic CDF
 %'Probit': discrete dependent variable, standard normal CDF
 %'GHK': discrete dependent variable, multivariate normal CDF
-opts.Prob='Linear'; %'Probit','Logit','GHK', 'HP', 'Linear' 
+opts.Prob='Probit'; %'Probit','Logit','GHK', 'HP', 'Linear' 
 
 %Pool data across subjects, or estimate within:
 opts.WithinSubject=0;
@@ -112,7 +113,8 @@ opts.cluster=length(data); % each subject in own cluster
 opts.numInit = 1; %1: run using gradient- method first at theta0. If >1, use random starting points with gradient free method.
 %theta0=[39.6721      -86.581      22.0963      31.3169];
 %theta0 = [13 .1 1; 13 -.1 1];
-theta0 = [13 1];
+%theta0 = [13 .5 1];
+theta0=[0.06479577    0.03219943           3     0.1768171];
     
 %%%%Estimation Specific Parameters
 %for particle filter (ignore if using ML)

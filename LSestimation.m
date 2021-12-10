@@ -213,7 +213,7 @@ end
         
     else 
         
-        ci = nlparci(parh,resisuals,'covar',sigma)
+        ci = nlparci(parh,residuals,'covar',sigma)
 
         ses=zeros(1,length(LB));
 
