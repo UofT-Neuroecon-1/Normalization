@@ -35,7 +35,10 @@ d='test/'
 %load data/ExampleDataSS
 %load data/ExampleData3
 %load data/ExpDataSS
-load data/ExpData3
+%load data/ExpData3
+
+ load ~/Dropbox/Projects/Normalization/Vered/struct_binary_uniform
+ data = struct_binary_uniform;
 
 %load ~/Dropbox/Projects/IIA-NHB/kenway/kenwaydataout.mat
 
@@ -77,16 +80,17 @@ end
 %{'Linear'}
 %'DNw3'
 
-opts.Models = {'DNw'};
+opts.Models = {'DN'};
 
+%matrix which defines which alts are in the choice set (rows) and which alts to normalize them by (columns)
 % opts.toNorm=[1 0 1 1 0 0;
 %     0 1 0 0 1 1
 %     0 0 0 0 0 0
 %     0 0 0 0 0 0
 %     0 0 0 0 0 0
-%     0 0 0 0 0 0]; %matrix which defines which alts are in the choice set (rows) and which alts to normalize them by (columns)
+%     0 0 0 0 0 0]; 
 
-  opts.toNorm=ones(3);   
+opts.toNorm=ones(2);   %this normalizes all alternatvies by all others
 
 %What is the form of the likelihood?
 %'Linear': continuous dependent variable. Assumes that the 'target' is the
@@ -94,10 +98,10 @@ opts.Models = {'DNw'};
 %'Logit': discrete dependent variable, logistic CDF
 %'Probit': discrete dependent variable, standard normal CDF
 %'GHK': discrete dependent variable, multivariate normal CDF
-opts.Prob='Probit'; %'Probit','Logit','GHK', 'HP', 'Linear' 
+opts.Prob='Logit'; %'Probit','Logit','GHK', 'HP', 'Linear' 
 
 %Pool data across subjects, or estimate within:
-opts.WithinSubject=0;
+opts.WithinSubject=1;
 
 %And if pooling, allow hierarchical model?
 opts.Hier={}; %which parameters to make hierarchical: kappa, sigma, omega, alpha, beta;
@@ -114,7 +118,7 @@ opts.numInit = 1; %1: run using gradient- method first at theta0. If >1, use ran
 %theta0=[39.6721      -86.581      22.0963      31.3169];
 %theta0 = [13 .1 1; 13 -.1 1];
 %theta0 = [13 .5 1];
-theta0=[0.06479577    0.03219943           3     0.1768171];
+theta0=[20.2171    -0.172869];
     
 %%%%Estimation Specific Parameters
 %for particle filter (ignore if using ML)
@@ -175,6 +179,7 @@ else
     % Maximum Likelihood (Within)
     if opts.WithinSubject
         for s = 1:numel(data)
+
             disp(['Estimate subject: ',num2str(s)])
             MLEout(s) = MLestimation(data(s),theta0,opts);
 

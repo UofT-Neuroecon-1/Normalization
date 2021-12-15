@@ -9,7 +9,7 @@
         v0= par(:,strcmp(names, 'v0'),:);
         
         %f = @(x) (x(sum(opts.toNorm,2)>1).^(a'));
-        
+        isNorm=sum(opts.toNorm,2)>1;
         %
         if any(strcmp(opts.toEst, 'beta'))
             b = par(strcmp(names, 'beta'));
@@ -44,14 +44,14 @@
             weights=w*opts.toNorm; %w is a scalar
             ind=eye(length(opts.toNorm)); %'Need to adjust index to match number of alternatives and conform with opts.toNorm'
             weights(logical(ind(:)))=wx;
-            V=@(x) ( (x(sum(opts.toNorm,2)>1,:).^(a')) ./ (s + (weights*x) ));
+            V=@(x) ( (x(isNorm,:).^(a')) ./ (s + (weights*x) ));
         else
             if size(w,2)==1
                 weights=reshape(w,1,1,length(w)).*opts.toNorm;
             else
                 weights=w; warning('Check dimension of vector multiplication');
             end
-            V=@(x) ( (x(sum(opts.toNorm,2)>1,:).^(a)) ./ (reshape(s,1,1,length(s)) + squeeze(pagemtimes(weights(sum(opts.toNorm,2)>1,:,:),x))) );
+            V=@(x) ( (x(isNorm,:).^(a)) ./ (reshape(s,1,1,length(s)) + squeeze(pagemtimes(weights(isNorm,:,:),x))) );
             %denom=@(x) (s' + squeeze(pagemtimes(weights(sum(opts.toNorm,2)>1,:,:),x))); %if w is a scalar, then expand to vector and take vector product
         end
         

@@ -221,6 +221,7 @@ end
 %         disp(thetah);
 %         save 'mpnormEst1stStage.mat' 'thetah' 'nLL' 'exitflags'
 
+%Estimate with simplex methods first, then take derivatives second
         for n=1:size(theta0,1)
            [thetah(n,:), nLL(n), exitflags(n)]=fminsearchbnd(opts.objfun,theta0(n,:),LB(LB~=UB),UB(LB~=UB),options);  
             
@@ -284,14 +285,7 @@ end
     function [nLL, logPi]=LLfun(theta)
         
         if ~isempty(opts.Hier)
-                      
-            %par=opts.LB(1:6);
-            
-            %toEstimate=opts.LB(1:6)~=opts.UB(1:6);
-            
-            %par(toEstimate)=theta(1:end-sum(opts.Hier));
-            %par=theta(1:opts.toEst);
-            
+            %hierarchical estimation    
             
             rng(1,'twister') % set random number seed
             R=opts.R; %200
@@ -351,7 +345,7 @@ end
 %                 error('Dataset isnt balanced, cannot compute LL (yet)');
 %             end
 %             
-        else
+        else %not hierarchical
             particle.theta=theta;
             logPi=ProbaChoice(data, particle, opts );
             nLL=-sum(logPi);
